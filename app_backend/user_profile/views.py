@@ -79,7 +79,7 @@ def get_followings(request):
 	try:
 		getFollowings = request.GET
 		follower      = UserProfile.objects.get(userID=getFollowings["follower"])
-		return HttpResponse(follower.get_all_followings(Relationships.following))
+		return HttpResponse(follower.get_all_followings())
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))

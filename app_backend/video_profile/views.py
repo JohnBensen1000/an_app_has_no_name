@@ -13,19 +13,18 @@ def create_new_video(request):
 	try:
 		videoProfile = request.POST
 
-		creator   = UserProfile.objects.get(userID=videoProfile["creatorID"])
-		videoDemo = Demographics()
-		videoDemo.save()
+		Demographics().objects.create()
+		creator = UserProfile.objects.get(userID=videoProfile["creatorID"])
 
-		newVideo = VideoProfile(
+		VideoProfile.objects.create(
 			demographics = videoDemo,
 			creator      = creator
 		)
-		newVideo.save()
 		return HttpResponse()
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
+
 
 if __name__ == "__main__":
 	pass

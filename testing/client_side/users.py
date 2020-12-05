@@ -4,6 +4,7 @@ import random
 
 users = ["John", "Laura", "Kishan", "Alex", "Andrew", "Tim", "Jake", "Tom", "Nick", "Collin"]
 
+
 def create_account(url):
 	url += "client_side/users/create_new_user/"
 
@@ -23,6 +24,7 @@ def create_account(url):
 		response = requests.post(url, clientRequest)
 		print(response.text)
 
+
 def find_creators(url):
 	url += "client_side/users/search_creators/"
 
@@ -40,6 +42,7 @@ def find_creators(url):
 	except KeyboardInterrupt:
 		pass
 
+
 def start_following(url):
 	url += "client_side/users/start_following/"
 
@@ -54,6 +57,7 @@ def start_following(url):
 		response=requests.post(url, clientRequest)
 		print(response.text)
 
+
 def get_following(url):
 	url += "client_side/users/get_followings/"
 
@@ -65,6 +69,7 @@ def get_following(url):
 
 	response = requests.get(url, clientRequest)
 	print(response.text)
+
 
 def become_friends(url):
 	url += "client_side/users/become_friends/"
@@ -86,6 +91,7 @@ def become_friends(url):
 		}
 		response = requests.post(url, clientRequest)
 		print(response.text)
+
 
 def get_friends(url):
 	url += "client_side/users/get_friends/"
