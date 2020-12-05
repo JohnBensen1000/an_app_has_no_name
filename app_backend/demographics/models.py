@@ -3,27 +3,27 @@ from django.db import models
 # Create your models here.
 class Demographics(models.Model):
     # gender that user identifies as
-    male    = models.IntegerField(default=10)
-    female  = models.IntegerField(default=10)
-    other   = models.IntegerField(default=10)
+    male    = models.FloatField(default=.1)
+    female  = models.FloatField(default=.1)
+    other   = models.FloatField(default=.1)
     
     # age group user belongs to
-    y0_12   = models.IntegerField(default=10)
-    y13_17  = models.IntegerField(default=10)
-    y18_21  = models.IntegerField(default=10)
-    y22_25  = models.IntegerField(default=10)
-    y26_30  = models.IntegerField(default=10)
-    y31_35  = models.IntegerField(default=10)
-    y36_45  = models.IntegerField(default=10)
-    y46_55  = models.IntegerField(default=10)
-    y56_65  = models.IntegerField(default=10)
-    y65plus = models.IntegerField(default=10)
+    y0_12   = models.FloatField(default=.1)
+    y13_17  = models.FloatField(default=.1)
+    y18_21  = models.FloatField(default=.1)
+    y22_25  = models.FloatField(default=.1)
+    y26_30  = models.FloatField(default=.1)
+    y31_35  = models.FloatField(default=.1)
+    y36_45  = models.FloatField(default=.1)
+    y46_55  = models.FloatField(default=.1)
+    y56_65  = models.FloatField(default=.1)
+    y65plus = models.FloatField(default=.1)
     
     # interests
-    dance   = models.IntegerField(default=10)
-    comedy  = models.IntegerField(default=10)
-    trends  = models.IntegerField(default=10)
-    singing = models.IntegerField(default=10)
+    dance   = models.FloatField(default=.1)
+    comedy  = models.FloatField(default=.1)
+    trends  = models.FloatField(default=.1)
+    singing = models.FloatField(default=.1)
     
     def get_int_list(self):
         return [

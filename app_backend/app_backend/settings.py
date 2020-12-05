@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'demographics',
     'user_profile',
+    'video_profile',
     
     'django.contrib.admin',
     'django.contrib.auth',
@@ -111,7 +112,7 @@ else:
             'HOST': '127.0.0.1',
             #'HOST': '/cloudsql/app-cloud-297304:us-central1:instance-1',
             #'PORT': '',
-            'PORT': '3306',
+            'PORT': '5432',
             'NAME': 'database_1',
             'USER': 'john_bensen',
             'PASSWORD': 'a_girl_has_no_name',

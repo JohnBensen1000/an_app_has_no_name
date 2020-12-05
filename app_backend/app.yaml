@@ -1,5 +1,5 @@
 runtime: python37
-entrypoint: gunicorn -b :8080 app_backend.wsgi:application
+#entrypoint: gunicorn -b :8080 app_backend.wsgi:application
 handlers:
 # This configures Google App Engine to serve the files in the app's
 # static directory.
