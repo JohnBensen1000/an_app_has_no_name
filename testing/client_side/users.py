@@ -9,16 +9,21 @@ def create_account(url):
 	url += "client_side/users/create_new_user/"
 
 	for username in users:
-		demographics      = [random.uniform(0, 1) for a in range(17)]
 		userID            = username + "1000"
 		preferredLanguage = "English"
 		username          = username
+		demographics      = [random.uniform(0, 1) for a in range(17)]
+
+		email             = username + "@gmail.com"
+		phone             = "15164979872"
 
 		clientRequest = {
-			"demographics":str(demographics),
-			"userID":userID,
+			"userID":           userID,          
 			"preferredLanguage":preferredLanguage,
-			"username":username
+			"username":         username,          
+			"demographics":     str(demographics),  
+			"email":            email,             
+			"phone":            phone,          
 		}
 
 		response = requests.post(url, clientRequest)
@@ -48,10 +53,21 @@ def start_following(url):
 
 	follower = users[0] + "1000"
 
-	for creator in users[2:5] + users[2:4]:
+	for creator in users[2:5]:
 		clientRequest = {
 			"follower":follower,
 			"creator": creator + "1000"
+		}
+
+		response=requests.post(url, clientRequest)
+		print(response.text)
+
+	creator = users[7] + "1000"
+
+	for follower in users[3:7]:
+		clientRequest = {
+			"follower":follower + "1000",
+			"creator": creator
 		}
 
 		response=requests.post(url, clientRequest)
@@ -61,14 +77,25 @@ def start_following(url):
 def get_following(url):
 	url += "client_side/users/get_followings/"
 
-	follower = users[0] + "1000"
+	for follower in users:
+		clientRequest = {
+			"follower":follower + "1000"
+		}
 
-	clientRequest = {
-		"follower":follower
-	}
+		response = requests.get(url, clientRequest)
+		print(response.text)
 
-	response = requests.get(url, clientRequest)
-	print(response.text)
+
+def get_followers(url):
+	url += "client_side/users/get_followers/"
+
+	for creator in users:
+		clientRequest = {
+			"creator":creator + "1000"
+		}
+
+		response = requests.get(url, clientRequest)
+		print(response.text)
 
 
 def become_friends(url):

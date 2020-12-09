@@ -1,9 +1,10 @@
 from django.db import models
 from demographics.models import Demographics
-from user_profile import UserProfile
+from user_profile.models import UserProfile
 
 # Create your models here.
 class VideoProfile(models.Model):
+	videoID = models.AutoField(primary_key=True)
 	private = models.BooleanField(default=False)
 
 	demographics = models.OneToOneField(
@@ -14,11 +15,10 @@ class VideoProfile(models.Model):
 	creator = models.ForeignKey(
 		UserProfile, 
 		on_delete=models.CASCADE, 
-		backref='postedVideos'
+		related_name="created"
 	)
 
-    watchedBy = models.ManyToManyField(
-    	UserProfile, 
-    	on_delete=models.CASCADE, 
-    )
-
+	watchedBy = models.ManyToManyField(
+		UserProfile, 
+		related_name="watched"
+	)

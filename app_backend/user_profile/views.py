@@ -13,23 +13,27 @@ def create_new_user(request):
 	try:
 		userProfile = request.POST
 
+		if UserProfile.objects.filter(userID=userProfile["userID"]).exists():
+			return HttpResponse("A user already has taken this user ID.") 
+			#return HttpResponse(UserProfile.objects.filter(userID=userProfile["userID"]))
+
 		demoList = [float(x) for x in userProfile["demographics"].split("[")[1].split("]")[0].split(",")]
 		userDemo = Demographics.objects.create()
 		userDemo.set_int_list(demoList)
 
-		usersWithID = UserProfile.objects.filter(userID=userProfile["userID"])
+		accountInfo = AccountInfo.objects.create(
+			email=userProfile["email"],
+    		phone=userProfile["phone"]
+		)
 
-		if usersWithID != []:
-			UserProfile.objects.create(
-				demographics      = userDemo,
-				userID            = userProfile["userID"],
-				preferredLanguage = userProfile["preferredLanguage"],
-				username          = userProfile["username"]
-			)
-			return HttpResponse("Created new user!")
-
-		else:
-			return HttpResponse("A user already has taken this user ID.")
+		UserProfile.objects.create(
+			userID            = userProfile["userID"],
+			username          = userProfile["username"],
+			preferredLanguage = userProfile["preferredLanguage"],
+			demographics      = userDemo,
+			accountInfo       = accountInfo
+		)
+		return HttpResponse("Created new user!")
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
@@ -79,7 +83,18 @@ def get_followings(request):
 	try:
 		getFollowings = request.GET
 		follower      = UserProfile.objects.get(userID=getFollowings["follower"])
-		return HttpResponse(follower.get_all_followings())
+		return HttpResponse(follower.get_followings())
+
+	except:
+		return HttpResponse(str(sys.exc_info()[0]))
+
+
+@csrf_exempt
+def get_followers(request):
+	try:
+		getFollowers = request.GET
+		creator      = UserProfile.objects.get(userID=getFollowers["creator"])
+		return HttpResponse(creator.get_followers())
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
