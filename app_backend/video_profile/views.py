@@ -17,7 +17,6 @@ def create_new_video(request):
 		creator   = UserProfile.objects.get(userID=videoProfile["creator"])
 
 		VideoProfile.objects.create(
-			private      = False,
 			demographics = videoDemo,
 			creator      = creator,
 		)
@@ -43,15 +42,15 @@ def record_watched_video(request):
 def get_posted_videos(request):
 	try:
 		recordWatched = request.GET
-		userProfile   = UserProfile.objects.get(userID=recordWatched["user"])
-		postedVideos  = [video.id for video in VideoProfile.objects.filter(creator=userProfile)]
+		userProfile   = UserProfile.objects.get(userID=recordWatched["creator"])
+		postedVideos  = [{"id":video.videoID, "timeCreated":video.timeCreated} 
+							for video in userProfile.created.all()]
 
 		return HttpResponse(postedVideos)
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
-
-
+		
 
 if __name__ == "__main__":
 	pass

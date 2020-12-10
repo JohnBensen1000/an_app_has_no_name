@@ -4,7 +4,7 @@ from demographics.models import Demographics
 
 class AccountInfo(models.Model):
     email = models.CharField(max_length=50) 
-    phone = models.CharField(max_length=10) 
+    phone = models.CharField(max_length=15) 
 
 
 class UserProfile(models.Model):

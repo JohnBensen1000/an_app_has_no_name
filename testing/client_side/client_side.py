@@ -27,6 +27,7 @@ if __name__ == "__main__":
 	print("		[6] Become Friends")
 	print("		[7] Get Friends")
 	print("		[8] Record Watched Video")
+	print("		[9] Get posted videos")
 
 	func = int(input("Action: "))
 
@@ -39,3 +40,4 @@ if __name__ == "__main__":
 	if func == 6: users.become_friends(url)
 	if func == 7: users.get_friends(url)
 	if func == 8: videos.record_watched_video(url)
+	if func == 9: videos.get_posted_videos(url)

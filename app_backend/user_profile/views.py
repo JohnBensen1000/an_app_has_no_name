@@ -5,7 +5,7 @@ from demographics.models import Demographics
 from user_profile.models import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from django.views.decorators.http import require_http_methods
 
 #@require_http_methods(["POST"])
 @csrf_exempt
@@ -15,11 +15,10 @@ def create_new_user(request):
 
 		if UserProfile.objects.filter(userID=userProfile["userID"]).exists():
 			return HttpResponse("A user already has taken this user ID.") 
-			#return HttpResponse(UserProfile.objects.filter(userID=userProfile["userID"]))
 
 		demoList = [float(x) for x in userProfile["demographics"].split("[")[1].split("]")[0].split(",")]
 		userDemo = Demographics.objects.create()
-		userDemo.set_int_list(demoList)
+		#userDemo.set_int_list(demoList)
 
 		accountInfo = AccountInfo.objects.create(
 			email=userProfile["email"],
@@ -113,6 +112,7 @@ def become_friends(request):
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
+
 
 @csrf_exempt
 def get_friends(request):
