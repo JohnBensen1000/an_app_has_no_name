@@ -22,9 +22,7 @@ class Watched(StructuredRel):
 	userRating  = properties.FloatProperty()
 
 
-class User(Node, StructuredNode):
-	__metaclass__ = Node
-
+class User(StructuredNode):
 	userID    = properties.StringProperty(unique_index=True, required=True)
 	embedding = properties.ArrayProperty(required=True)
 
@@ -41,15 +39,13 @@ class User(Node, StructuredNode):
 			"IS_FOLLOWING": self.following.all(),
 			"POSTED":       self.posts.all(),
 			"WATCHED":      self.watched.all(),
-		}
+		}		
 
 	def get_id(self):
 		return self.userID
 
 
 class Post(StructuredNode):
-	__metaclass__ = Node
-
 	postID      = properties.IntegerProperty(required=True, unique_index=True)
 	timeCreated = properties.DateTimeProperty(default_now=True)
 	embedding   = properties.ArrayProperty(required=True)
@@ -70,8 +66,9 @@ class Post(StructuredNode):
 if __name__ == "__main__":
 	#pass
 	user = User.nodes.get(userID="John")
-	print(user.get_all_relations())
-	print(user.get_id())
+	post = Post.nodes.get(postID=51)
+	print(user.watched.relationship(post).userRating)
+	#print(user.get_id())
 
 	# print(vars(user)["friends"].all())
 

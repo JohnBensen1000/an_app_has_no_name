@@ -49,39 +49,38 @@ def delete_all():
 		post.delete()
 
 if __name__ == "__main__":
-	pass
-	# delete_all()
-	# userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
+	delete_all()
+	userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin", "Rob", "Jon", "Cersei", "Jorah", "Sam", "Emily", "Catylen"]
 
-	# for j, userID in enumerate(userIDs):
-	# 	user = create_user(userID, [random.random() for i in range(10)])
-	# 	for i in range(random.randint(0, 3)):
-	# 		create_post(user.userID, j * 10 + i, [.1] * 10)
+	for j, userID in enumerate(userIDs):
+		user = create_user(userID, [random.randint(0, 1) for i in range(10)])
+		for i in range(random.randint(0, 3)):
+			create_post(user.userID, j * 10 + i, [random.randint(0, 1) for i in range(10)])
 
-	# for userID in userIDs:
-	# 	start = random.randint(0, len(userIDs))
-	# 	end   = random.randint(start, len(userIDs))
+	for userID in userIDs:
+		start = random.randint(0, len(userIDs))
+		end   = random.randint(start, len(userIDs))
 
-	# 	for friendID in userIDs[start:end]:
-	# 		if userID != friendID:
-	# 			add_friend(userID, friendID)
+		for friendID in userIDs[start:end]:
+			if userID != friendID:
+				add_friend(userID, friendID)
 
-	# for userID in userIDs:
-	# 	start = random.randint(0, len(userIDs))
-	# 	end   = random.randint(start, len(userIDs))
+	for userID in userIDs:
+		start = random.randint(0, len(userIDs))
+		end   = random.randint(start, len(userIDs))
 
-	# 	for creatorID in userIDs[start:end]:
-	# 		if userID != creatorID:
-	# 			start_following(userID, creatorID)
+		for creatorID in userIDs[start:end]:
+			if userID != creatorID:
+				start_following(userID, creatorID)
 
-	# posts = Post.nodes.all()
-	# for userID in userIDs:
-	# 	start = random.randint(0, len(posts))
-	# 	end   = random.randint(start, len(posts))
+	posts = Post.nodes.all()
+	for userID in userIDs:
+		start = random.randint(0, len(posts))
+		end   = random.randint(start, len(posts))
 
-	# 	for post in posts[start:start + 1]:
-	# 		if post.creator.single().userID != userID:
-	# 			record_watched(userID, post.postID)
+		for post in posts[start:start + end]:
+			if post.creator.single().userID != userID:
+				record_watched(userID, post.postID)
 
 
 
