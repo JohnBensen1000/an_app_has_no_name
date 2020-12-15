@@ -1,7 +1,17 @@
-from neomodel import config, StructuredNode, StructuredRel, properties, cardinality
+from neomodel import config, StructuredNode, StructuredRel, properties, cardinality, match
 import neomodel as neo 
-import random
 
+import random
+from abc import ABC, abstractmethod
+
+class Node(ABC):
+	@abstractmethod
+	def get_all_relations(self):
+		pass
+
+	@abstractmethod
+	def get_id(self):
+		pass
 
 config.ENCRYPTED_CONNECTION = False
 config.DATABASE_URL = 'bolt://neo4j:PulpFiction1@localhost:7687' # default
@@ -12,28 +22,63 @@ class Watched(StructuredRel):
 	userRating  = properties.FloatProperty()
 
 
-class User(StructuredNode):
-    userID = properties.StringProperty(unique_index=True, required=True)
-    demo   = properties.ArrayProperty(required=True)
+class User(Node, StructuredNode):
+	__metaclass__ = Node
 
-    friends   = neo.Relationship('User', 'FRIENDS_WITH')
-    following = neo.RelationshipTo('User', "IS_FOLLOWING") 
-    followers = neo.RelationshipFrom('User', "IS_FOLLOWING")
+	userID    = properties.StringProperty(unique_index=True, required=True)
+	embedding = properties.ArrayProperty(required=True)
 
-    posts   = neo.RelationshipTo('Post', 'POSTED')
-    watched = neo.RelationshipTo('Post', 'WATCHED', model=Watched)
+	friends   = neo.Relationship('User', 'FRIENDS_WITH')
+	following = neo.RelationshipTo('User', "IS_FOLLOWING") 
+	followers = neo.RelationshipFrom('User', "IS_FOLLOWING")
+
+	posts   = neo.RelationshipTo('Post', 'POSTED')
+	watched = neo.RelationshipTo('Post', 'WATCHED', model=Watched)
+
+	def get_all_relations(self):
+		return {
+			"FRIENDS_WITH": self.friends.all(), 
+			"IS_FOLLOWING": self.following.all(),
+			"POSTED":       self.posts.all(),
+			"WATCHED":      self.watched.all(),
+		}
+
+	def get_id(self):
+		return self.userID
 
 
 class Post(StructuredNode):
+	__metaclass__ = Node
+
 	postID      = properties.IntegerProperty(required=True, unique_index=True)
 	timeCreated = properties.DateTimeProperty(default_now=True)
-	demo        = properties.ArrayProperty(required=True)
+	embedding   = properties.ArrayProperty(required=True)
 
 	creator    = neo.RelationshipFrom('User', 'POSTED', cardinality=cardinality.One)
 	watched_by = neo.RelationshipFrom('User', 'WATCHED')
 
+	def get_all_relations(self):
+		return {
+			"POSTED":  self.creator.all(),
+			"WATCHED": self.watched_by.all(),
+		}
 
-userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
+	def get_id(self):
+		return self.postID
+
+
+if __name__ == "__main__":
+	#pass
+	user = User.nodes.get(userID="John")
+	print(user.get_all_relations())
+	print(user.get_id())
+
+	# print(vars(user)["friends"].all())
+
+	# watched = user.watched
+	# for watch in watched:
+	# 	print(watch)
+#userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
 
 # allUsers = User.nodes.all()
 # allPosts = Post.nodes.all()
@@ -52,8 +97,8 @@ userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
 	# 	print(creator.userID)
 
 # for userID in userIDs:
-# 	demo    = [.1] * 10
-# 	newUser = User(userID=userID, demo=demo)
+# 	embedding    = [.1] * 10
+# 	newUser = User(userID=userID, embedding=embedding)
 # 	newUser.save()
 
 # for userID in userIDs:
@@ -74,9 +119,9 @@ userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
 
 # for userID in userIDs:
 # 	user    = User.nodes.get(userID=userID)
-# 	demo    = [.1] * 10
+# 	embedding = [.1] * 10
 
 # 	for i in range(random.randint(0, 3)):
-# 		newPost = Post(demo=demo)
+# 		newPost = Post(embedding=embedding)
 # 		newPost.save()
 # 		user.posts.connect(newPost)
