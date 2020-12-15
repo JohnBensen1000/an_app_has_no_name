@@ -2,6 +2,7 @@ import sys
 import random
 
 from models import *
+from linked_list import *
 
 def create_user(userID, embedding):
 	return User(userID=userID, embedding=embedding).save()
@@ -39,49 +40,65 @@ def record_watched(userID, postID):
 
 	user.watched.connect(post, {"userRating":random.random()})
 
-def delete_all():
-	users = User.nodes.all()
-	for user in users:
-		user.delete()
+def run_recommendations(userID):
+	user       = User.nodes.get(userID=userID)
+	linkedList = LinkedList()
+	rippleNet  = RippleNet(10)
 
-	posts = Post.nodes.all()
-	for post in posts:
-		post.delete()
+	userWatched = user.watched.all()
+	userPosted  = user.posts.all()
+
+	for post in Post.nodes.all():
+		if post not in userPosted and post not in userWatched:
+			newNode = PostNode(post.get_id(), rippleNet.find_relevance(user, post, 3))
+			linkedList.add_node(newNode)
+
+	return linkedList.get_node_ids()
+
+# def delete_all():
+# 	users = User.nodes.all()
+# 	for user in users:
+# 		user.delete()
+
+# 	posts = Post.nodes.all()
+# 	for post in posts:
+# 		post.delete()
 
 if __name__ == "__main__":
-	delete_all()
-	#userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin", "Rob", "Jon", "Cersei", "Jorah", "Sam", "Emily", "Catylen", "Emma", "Kate", "Grace", "Danny", "James"]
-	userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
-	
-	for j, userID in enumerate(userIDs):
-		user = create_user(userID, [random.randint(0, 1) for i in range(10)])
-		for i in range(random.randint(0, 2)):
-			create_post(user.userID, j * 10 + i, [random.randint(0, 1) for i in range(10)])
+	print(run_recommendations("Tom"))
+	# delete_all()
+	# #userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin", "Rob", "Jon", "Cersei", "Jorah", "Sam", "Emily", "Catylen", "Emma", "Kate", "Grace", "Danny", "James"]
+	# userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
 
-	for userID in userIDs:
-		start = random.randint(0, len(userIDs))
-		end   = random.randint(start, len(userIDs)) // 3
+	# for j, userID in enumerate(userIDs):
+	# 	user = create_user(userID, [random.randint(0, 1) for i in range(10)])
+	# 	for i in range(random.randint(0, 2)):
+	# 		create_post(user.userID, j * 10 + i, [random.randint(0, 1) for i in range(10)])
 
-		for friendID in userIDs[start:end]:
-			if userID != friendID:
-				add_friend(userID, friendID)
+	# for userID in userIDs:
+	# 	start = random.randint(0, len(userIDs))
+	# 	end   = random.randint(start, len(userIDs)) // 3
 
-	for userID in userIDs:
-		start = random.randint(0, len(userIDs))
-		end   = random.randint(start, len(userIDs)) // 3
+	# 	for friendID in userIDs[start:end]:
+	# 		if userID != friendID:
+	# 			add_friend(userID, friendID)
 
-		for creatorID in userIDs[start:end]:
-			if userID != creatorID:
-				start_following(userID, creatorID)
+	# for userID in userIDs:
+	# 	start = random.randint(0, len(userIDs))
+	# 	end   = random.randint(start, len(userIDs)) // 3
 
-	posts = Post.nodes.all()
-	for userID in userIDs:
-		start = random.randint(0, len(posts))
-		end   = random.randint(start, len(posts)) // 3
+	# 	for creatorID in userIDs[start:end]:
+	# 		if userID != creatorID:
+	# 			start_following(userID, creatorID)
 
-		for post in posts[start:start + end]:
-			if post.creator.single().userID != userID:
-				record_watched(userID, post.postID)
+	# posts = Post.nodes.all()
+	# for userID in userIDs:
+	# 	start = random.randint(0, len(posts))
+	# 	end   = random.randint(start, len(posts)) // 3
+
+	# 	for post in posts[start:start + end]:
+	# 		if post.creator.single().userID != userID:
+	# 			record_watched(userID, post.postID)
 
 
 

@@ -79,22 +79,6 @@ class LinkedList:
 		return listOfNodes
 
 
-def run_recommendations(userID):
-	user       = User.nodes.get(userID=userID)
-	linkedList = LinkedList()
-	rippleNet  = RippleNet(10)
-
-	userWatched = user.watched.all()
-	userPosted  = user.posts.all()
-
-	for post in Post.nodes.all():
-		if post not in userPosted and post not in userWatched:
-			newNode = PostNode(post.get_id(), rippleNet.find_relevance(user, post, 1))
-			linkedList.add_node(newNode)
-
-	return linkedList.get_node_ids()
-
-
 if __name__ == "__main__":
 	print(run_recommendations('Tom'))
 	# linkedList = LinkedList()
