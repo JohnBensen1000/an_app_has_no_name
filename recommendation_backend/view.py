@@ -50,16 +50,17 @@ def delete_all():
 
 if __name__ == "__main__":
 	delete_all()
-	userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin", "Rob", "Jon", "Cersei", "Jorah", "Sam", "Emily", "Catylen"]
-
+	#userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin", "Rob", "Jon", "Cersei", "Jorah", "Sam", "Emily", "Catylen", "Emma", "Kate", "Grace", "Danny", "James"]
+	userIDs = ["John", "Laura", "Jake", "Tom", "Kyra", "Andrew", "Collin"]
+	
 	for j, userID in enumerate(userIDs):
 		user = create_user(userID, [random.randint(0, 1) for i in range(10)])
-		for i in range(random.randint(0, 3)):
+		for i in range(random.randint(0, 2)):
 			create_post(user.userID, j * 10 + i, [random.randint(0, 1) for i in range(10)])
 
 	for userID in userIDs:
 		start = random.randint(0, len(userIDs))
-		end   = random.randint(start, len(userIDs))
+		end   = random.randint(start, len(userIDs)) // 3
 
 		for friendID in userIDs[start:end]:
 			if userID != friendID:
@@ -67,7 +68,7 @@ if __name__ == "__main__":
 
 	for userID in userIDs:
 		start = random.randint(0, len(userIDs))
-		end   = random.randint(start, len(userIDs))
+		end   = random.randint(start, len(userIDs)) // 3
 
 		for creatorID in userIDs[start:end]:
 			if userID != creatorID:
@@ -76,7 +77,7 @@ if __name__ == "__main__":
 	posts = Post.nodes.all()
 	for userID in userIDs:
 		start = random.randint(0, len(posts))
-		end   = random.randint(start, len(posts))
+		end   = random.randint(start, len(posts)) // 3
 
 		for post in posts[start:start + end]:
 			if post.creator.single().userID != userID:
