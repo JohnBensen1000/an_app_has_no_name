@@ -81,33 +81,51 @@ WSGI_APPLICATION = 'app_backend.wsgi.application'
 # pymysql.version_info = (1, 4, 6, 'final', 0)  # change mysqlclient version
 # pymysql.install_as_MySQLdb()
 
-if os.getenv('GAE_APPLICATION', None):
-    # Running on production App Engine, so connect to Google Cloud SQL using
-    # the unix socket at /cloudsql/<your-cloudsql-connection string>
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'HOST': '/cloudsql/app-cloud-297304:us-central1:instance-2',
-            'USER': 'john_bensen',
-            'PASSWORD': 'a_girl_has_no_name',
-            'NAME': 'app_backend',
-        }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PASSWORD': 'postgres',
+#         'HOST': 'db',
+#         'PORT': 5432,
+#     }
+# }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
-else:
-    DATABASES = {
-        'default': {
-            # If you are using Cloud SQL for MySQL rather than PostgreSQL, set
-            # 'ENGINE': 'django.db.backends.mysql' instead of the following.
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'app_backend',
-            # 'USER': os.getenv('DATABASE_USER'),
-            # 'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-            'USER': 'john_bensen',
-            'PASSWORD': 'a_girl_has_no_name',
-            'HOST': '127.0.0.1',
-            'PORT': '5432',
-        }
-    }
+}
+
+# if os.getenv('GAE_APPLICATION', None):
+#     # Running on production App Engine, so connect to Google Cloud SQL using
+#     # the unix socket at /cloudsql/<your-cloudsql-connection string>
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'HOST': '/cloudsql/app-cloud-297304:us-central1:instance-2',
+#             'USER': 'john_bensen',
+#             'PASSWORD': 'a_girl_has_no_name',
+#             'NAME': 'app_backend',
+#         }
+#     }
+# else:
+#     DATABASES = {
+#         'default': {
+#             # If you are using Cloud SQL for MySQL rather than PostgreSQL, set
+#             # 'ENGINE': 'django.db.backends.mysql' instead of the following.
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': 'app_backend',
+#             # 'USER': os.getenv('DATABASE_USER'),
+#             # 'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+#             'USER': 'john_bensen',
+#             'PASSWORD': 'a_girl_has_no_name',
+#             'HOST': '127.0.0.1',
+#             'PORT': '5432',
+#         }
+#     }
 
 # if os.getenv('GAE_APPLICATION', None):
 #     # Running on production App Engine, so connect to Google Cloud SQL using
