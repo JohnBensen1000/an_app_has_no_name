@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = '-n6k0vz0iqu2l(!_(u!eou9)ow@7jc1_7kz(l)yi=l*%^h&nhq'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -32,9 +32,9 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
-    'demographics',
     'user_profile',
     'video_profile',
+    'graph_data',
     
     'django.contrib.admin',
     'django.contrib.auth',
@@ -74,12 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'app_backend.wsgi.application'
 
-
-# Database
-# # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-# import pymysql  # noqa: 402
-# pymysql.version_info = (1, 4, 6, 'final', 0)  # change mysqlclient version
-# pymysql.install_as_MySQLdb()
 
 # DATABASES = {
 #     'default': {
@@ -124,44 +118,6 @@ DATABASES = {
 #             'PASSWORD': 'a_girl_has_no_name',
 #             'HOST': '127.0.0.1',
 #             'PORT': '5432',
-#         }
-#     }
-
-# if os.getenv('GAE_APPLICATION', None):
-#     # Running on production App Engine, so connect to Google Cloud SQL using
-#     # the unix socket at /cloudsql/<your-cloudsql-connection string>
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.mysql',
-#             #'ENGINE': 'django.db.backends.sqlite3',
-#             'HOST': '/cloudsql/app-cloud-297304:us-central1:instance-1',
-#             #'HOST': "200.27.123.0",
-#             'USER': 'john_bensen',
-#             'PASSWORD': 'a_girl_has_no_name',
-#             'NAME': 'database_1',
-#         }
-#     }
-# else:
-#     # Running locally so connect to either a local MySQL instance or connect 
-#     # to Cloud SQL via the proxy.  To start the proxy via command line: 
-#     #    $ cloud_sql_proxy -instances=[INSTANCE_CONNECTION_NAME]=tcp:3306 
-#     # See https://cloud.google.com/sql/docs/mysql-connect-proxy
-#     # DATABASES = {
-#     #     'default': {
-#     #         'ENGINE': 'django.db.backends.sqlite3',
-#     #         'NAME': BASE_DIR / 'db.sqlite3',
-#     #     }
-#     # }
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'HOST': '127.0.0.1',
-#             #'HOST': '/cloudsql/app-cloud-297304:us-central1:instance-1',
-#             #'PORT': '',
-#             'PORT': '5432',
-#             'NAME': 'database_1',
-#             'USER': 'john_bensen',
-#             'PASSWORD': 'a_girl_has_no_name',
 #         }
 #     }
 

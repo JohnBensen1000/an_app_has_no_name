@@ -12,7 +12,7 @@ def create_account(url):
 		userID            = username + "1000"
 		preferredLanguage = "English"
 		username          = username
-		demographics      = [random.uniform(0, 1) for a in range(17)]
+		embedding         = [random.uniform(0, 1) for a in range(17)]
 
 		email             = username + "@gmail.com"
 		phone             = "15164979872"
@@ -21,7 +21,7 @@ def create_account(url):
 			"userID":           userID,          
 			"preferredLanguage":preferredLanguage,
 			"username":         username,          
-			"demographics":     str(demographics),  
+			"embedding":        str(embedding),  
 			"email":            email,             
 			"phone":            phone,          
 		}
@@ -29,6 +29,8 @@ def create_account(url):
 		response = requests.post(url, clientRequest)
 		print(response.text)
 
+# def delete_users(url):
+# 	url
 
 def find_creators(url):
 	url += "client_side/users/search_creators/"

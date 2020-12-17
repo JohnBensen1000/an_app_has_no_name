@@ -1,7 +1,6 @@
 import sys
 
 from django.shortcuts import render
-from demographics.models import Demographics
 from user_profile.models import UserProfile
 from video_profile.models import *
 from django.http import HttpResponse

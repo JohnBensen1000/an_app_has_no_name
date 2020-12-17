@@ -28,6 +28,7 @@ if __name__ == "__main__":
 	print("		[7] Get Friends")
 	print("		[8] Record Watched Video")
 	print("		[9] Get posted videos")
+	print("	   [10] Delete users")
 
 	func = int(input("Action: "))
 
@@ -41,3 +42,4 @@ if __name__ == "__main__":
 	if func == 7: users.get_friends(url)
 	if func == 8: videos.record_watched_video(url)
 	if func == 9: videos.get_posted_videos(url)
+	if func == 10: users.delete_users(url)

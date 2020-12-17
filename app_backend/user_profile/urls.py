@@ -1,13 +1,18 @@
 from django.urls import path
 
-from . import views
+from .views import *
+
+# HTTP methods in paranthesis are methods that will be supported in the 
+# future but are not supported yet
 
 urlpatterns = [
-    path('create_new_user/', views.create_new_user, name='create_new_user'), 	# POST
-    path('search_creators/', views.search_creators, name='search_creators'),	# GET
-    path('start_following/', views.start_following, name='start_following'), 	# POST
-    path('get_followings/',  views.get_followings,  name='get_followings'),		# GET
-    path('get_followers/',   views.get_followers,   name='get_followers'), 		# GET
-    path('become_friends/',  views.become_friends,  name='become_friends'), 	# POST
-    path('get_friends/',     views.get_friends,     name='get_friends'), 		# GET
+    path('',               								search_creators),	# GET
+    path('new_user/',      								create_new_user), 	# POST
+    path('<slug:userID>/',  							update_user),		# DELETE, GET, (POST)
+    path('<slug:userID>/following/',                 	get_followings),	# GET
+    path('<slug:userID>/following/new/',             	start_following), 	# POST
+    path('<slug:userID>/following/<slug:creatorID>/', 	update_following),	# DELETE, (GET), (POST)
+    path('<slug:userID>/friends/',                		get_friends), 		# GET
+    path('<slug:userID>/friends/new/',            		become_friends), 	# POST
+    path('<slug:userID>/friends/<slug:friendID>/', 		update_friendship),	# DELETE, (GET), (POST)
 ]
