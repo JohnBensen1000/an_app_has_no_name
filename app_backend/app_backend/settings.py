@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'user_profile',
-    'video_profile',
+    'post_profile',
     'graph_data',
     
     'django.contrib.admin',
