@@ -1,6 +1,6 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import PostProfile
+from .models import *
 
 admin.site.register(PostProfile)

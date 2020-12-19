@@ -8,6 +8,7 @@ print("What do you want to do?")
 print("		[0] Get created posts.")
 print("		[1] Create new post.")
 print("		[2] Record watched video.")
+print("		[3] Get recommended posts.")
 
 option = int(input("Option: "))
 
@@ -45,16 +46,18 @@ if option == 2:
 		end   = random.randint(start, len(postIDList)) // 2
 
 		for postID in postIDList[start:end]:
-			newUrl = url + "posts/%s/watched/" % (user + "1000")
+			newUrl = url + "posts/%s/watched/%s/" % (user + "1000", postID)
 
 			clientRequest = {
-				"postID": str(postID),
 				"userRating": str(random.randint(-1, 1))
 			}
 			response = requests.post(newUrl, clientRequest)
 			print(response.text)
 
+if option == 3:
+	for user in users:
+		newUrl = url + "posts/%s/recommendations/" % (user + str(1000))
 
+		response = requests.post(newUrl)
+		print(response.text)
 
-	# for user in users:
-	# 	start = random.randint(0, len())
