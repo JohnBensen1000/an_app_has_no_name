@@ -29,7 +29,7 @@ if option == 1:
 		userID            = username + "1000"
 		preferredLanguage = "English"
 		username          = username
-		embedding         = [random.uniform(0, 1) for a in range(17)]
+		demographics      = [random.uniform(0, 1) for a in range(19)]
 
 		email             = username + "@gmail.com"
 		phone             = "15164979872"
@@ -38,7 +38,7 @@ if option == 1:
 			"userID":           userID,          
 			"preferredLanguage":preferredLanguage,
 			"username":         username,          
-			"embedding":        str(embedding),  
+			"demographics":     str(demographics),  
 			"email":            email,             
 			"phone":            phone,          
 		}

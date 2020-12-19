@@ -49,7 +49,7 @@ if option == 2:
 
 			clientRequest = {
 				"postID": str(postID),
-				"userRating": str(random.random())
+				"userRating": str(random.randint(-1, 1))
 			}
 			response = requests.post(newUrl, clientRequest)
 			print(response.text)

@@ -2,14 +2,12 @@ import sys, json
 
 from django.shortcuts import render
 from user_profile.models import *
+from demographics.models import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from graph_data.models import *
-
-config.ENCRYPTED_CONNECTION = False
-config.DATABASE_URL = 'bolt://neo4j:PulpFiction1@localhost:7687' # default
 
 
 @csrf_exempt
@@ -38,8 +36,9 @@ def create_new_user(request):
 		if UserProfile.objects.filter(userID=userProfile["userID"]).exists():
 			return HttpResponse("A user already has taken this user ID.") 
 
-		embedding = [float(x) for x in userProfile["embedding"].split("[")[1].split("]")[0].split(",")]
-		UserNode(userID=userProfile["userID"], embedding=embedding).save()
+		demographics = [float(x) for x in userProfile["demographics"].split("[")[1].split("]")[0].split(",")]
+		userDemo     = Demographics.objects.create()
+		userDemo.set_list(demographics)
 
 		accountInfo = AccountInfo.objects.create(
 			email=userProfile["email"],
@@ -49,7 +48,8 @@ def create_new_user(request):
 			userID            = userProfile["userID"],
 			username          = userProfile["username"],
 			preferredLanguage = userProfile["preferredLanguage"],
-			accountInfo       = accountInfo
+			accountInfo       = accountInfo,
+			demographics      = userDemo,
 		)
 
 		return HttpResponse("Created new user!")
@@ -67,9 +67,8 @@ def update_user(request, userID=None):
 			return HttpResponse(userJson)
 
 		elif request.method == "DELETE":
-			UserNode.nodes.get(userID=userID).delete()
-			UserProfile.objects.get(userID=userID).delete()
-
+			user = UserProfile.objects.get(userID=userID)
+			user.delete_user()
 			return HttpResponse("Deleted user account")
 
 	except:
@@ -98,12 +97,7 @@ def start_following(request, followerID=None):
 			return HttpResponse("User is already following this creator.")
 
 		else:
-			followerNode = UserNode.nodes.get(userID=userID)
-			creatorNode  = UserNode.nodes.get(userID=following["creatorID"])
-			followerNode.following.connect(creatorNode)
-
 			Relationships.objects.create(follower=follower, creator=creator)
-
 			return HttpResponse("Successfully started following new creator!")
 
 	except:
@@ -120,12 +114,7 @@ def update_following(request, userID=None, creatorID=None):
 				return HttpResponse("User is not following this creator.")
 
 			else:
-				followerNode = UserNode.nodes.get(userID=userID)
-				creatorNode  = UserNode.nodes.get(userID=creatorID)
-				followerNode.following.disconnect(creatorNode)
-
 				Relationships.objects.get(follower=follower, creator=creator).delete()
-
 				return HttpResponse("Successfully deleted the following relation.")
 
 		else:
@@ -157,12 +146,7 @@ def become_friends(request, userID=None):
 			return HttpResponse("User is already friends with the other user.")
 
 		else:
-			userNode      = UserNode.nodes.get(userID=userID)
-			newFriendNode = UserNode.nodes.get(userID=newFriendID)
-			userNode.friends.connect(newFriendNode)
-
 			user.allFriends.add(newFriend)
-
 			return HttpResponse("Successfully started a new friendship!")
 
 	except:
@@ -179,12 +163,7 @@ def update_friendship(request, userID=None, friendID=None):
 				return HttpResponse("User is not friends with the other user.")
 
 			else:
-				userNode      = UserNode.nodes.get(userID=userID)
-				newFriendNode = UserNode.nodes.get(userID=friendID)
-				userNode.friends.disconnect(newFriendNode)
-
 				user.allFriends.remove(friend)
-
 				return HttpResponse("Successfully started a new friendship!")
 
 	except:

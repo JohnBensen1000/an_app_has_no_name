@@ -3,6 +3,7 @@ import sys
 from django.shortcuts import render
 from user_profile.models import UserProfile
 from post_profile.models import *
+from demographics.models import *
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
@@ -23,21 +24,16 @@ def update_posts(request, userID=None):
 				"userPosts": [{"id":post.postID, "timeCreated":post.timeCreated} 
 								for post in userProfile.created.all()]
 			}
-
 			return JsonResponse(userPosts)
 
 		if request.method == "POST":
+			postDemo = Demographics.objects.create()
+
 			postProfile = request.POST
 			newPost = PostProfile.objects.create(
-				creator=userProfile
+				demographics = postDemo,
+				creator      = userProfile
 			)
-
-			creatorNode = UserNode.nodes.get(userID=userID)
-			baselineEmbedding = [.1] * len(creatorNode.embedding)
-
-			newPostNode = PostNode(postID=newPost.postID, embedding=baselineEmbedding).save()
-			newPostNode.creator.connect(creatorNode)
-
 			return HttpResponse("Successfully posted new post!")
 
 		else:
@@ -47,14 +43,17 @@ def update_posts(request, userID=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def record_watched(request, userID=None):
+def record_watched(request, userID=None, postID=None):
 	try:
 		watchedJson = request.POST
+		post = Post.objects.get(postID=postID)
+		user = User.objects.get(userID=userID)
 
-		userNode = UserNode.nodes.get(userID=userID)
-		postNode = PostNode.nodes.get(postID=int(watchedJson["postID"]))
-		userNode.watched.connect(postNode, {"userRating":float(watchedJson["userRating"])})
-
+		watched = Watched.objects.create(
+			user       = user,
+			post       = post,
+			userRating = int(watchedJson["userRating"]),
+		)
 		return HttpResponse("Successfully recorded that user watched a video.")
 
 	except:

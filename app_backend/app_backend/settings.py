@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'user_profile',
     'post_profile',
     'graph_data',
+    'demographics',
     
     'django.contrib.admin',
     'django.contrib.auth',

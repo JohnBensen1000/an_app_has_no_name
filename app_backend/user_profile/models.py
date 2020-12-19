@@ -1,7 +1,7 @@
 import json
 
 from django.db import models
-#from demographics.models import Demographics
+from demographics.models import Demographics
 
 
 class AccountInfo(models.Model):
@@ -14,9 +14,9 @@ class UserProfile(models.Model):
     username = models.CharField(max_length=20, default="")
     preferredLanguage = models.CharField(max_length=20)
 
-    #demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)
     accountInfo  = models.OneToOneField(AccountInfo,  on_delete=models.CASCADE, default=None)
-        
+    demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)
+
     allRelationships = models.ManyToManyField(
         'self', 
         through='Relationships', 
@@ -27,13 +27,21 @@ class UserProfile(models.Model):
 
     def get_user_info_json(self):
         userJson = {
-            "userID": self.userID,
-            "username": self.username,
+            "userID":            self.userID,
+            "username":          self.username,
             "preferredLanguage": self.preferredLanguage,
-            "email": self.accountInfo.email,
-            "phone": self.accountInfo.phone,
+            "email":             self.accountInfo.email,
+            "phone":             self.accountInfo.phone,
         }
         return json.dumps(userJson)
+
+    def delete_user(self):
+        if self.accountInfo:
+            self.accountInfo.delete()
+        if self.demographics:
+            self.demographics.delete()
+
+        return super(self.__class__, self).delete()
 
 
     def get_followings(self):
