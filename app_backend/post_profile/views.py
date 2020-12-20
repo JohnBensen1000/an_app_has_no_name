@@ -47,7 +47,7 @@ def get_recommended_posts(request, userID=None):
 
 		#print(" [x] UserID: %s, sumDemo: %s, demographics: %s" % (userID, str(sum(userDemo)), str(np.round(userDemo, 2)))) 
 		
-		for post in PostProfile.objects.all():
+		for post in PostProfile.objects.exclude():
 			#print("    [x] PostID: %s, creatorID: %s, demographics: %s" % (post.postID, post.creator.userID, str(post.demographics.get_list())))
 			
 			if not (post.watchedBy.filter(userID=userID).exists() or post.creator.userID == userID):
@@ -71,13 +71,31 @@ def record_watched(request, userID=None, postID=None):
 		user = UserProfile.objects.get(userID=userID)
 		post = PostProfile.objects.get(postID=postID)
 
+		update_demographics(user, post, float(watchedJson["userRating"]))
+
 		post.watchedBy.add(user)
 
 		return HttpResponse("Successfully recorded that user watched a video.")
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
-		
-		
+
+def update_demographics(user, post, userRating):
+	stepSize = .01
+	
+	userDemo = np.array(user.demographics.get_list())
+	postDemo = np.array(post.demographics.get_list())
+	
+	userDemo += stepSize * userRating * postDemo
+	for i, demo in enumerate(userDemo):
+		if demo < 0.0: userDemo[i] = 0
+		if demo > 1.0: userDemo[i] = 1 
+		print(demo, userDemo[i], demo < 0.0)
+
+	postDemo += stepSize * userRating * userDemo
+	
+	user.demographics.set_list(userDemo)
+	post.demographics.set_list(postDemo)
+
 if __name__ == "__main__":
 	pass
