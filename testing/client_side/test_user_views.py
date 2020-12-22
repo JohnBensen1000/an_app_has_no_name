@@ -20,7 +20,18 @@ option = int(input("Option: "))
 users = ["John", "Laura", "Kishan", "Alex", "Andrew", "Tim", "Jake", "Tom", "Nick", "Collin"]
 
 if option == 0:
-	pass
+	print("Search for users, type CTRL-C to exit.")	
+	try:
+		while True:
+			searchString  = input()
+			newUrl = url + "users/" + searchString + "/"
+
+			response = requests.get(newUrl)
+			print(response.text)
+
+	except KeyboardInterrupt:
+		pass
+
 
 if option == 1:
 	url += "users/new_user/"
@@ -31,8 +42,8 @@ if option == 1:
 		username          = username
 		demographics      = [random.uniform(0, 1) for a in range(19)]
 
-		email             = username + "@gmail.com"
-		phone             = "15164979872"
+		email = username + "@gmail.com"
+		phone = "15164979872"
 
 		clientRequest = {
 			"userID":           userID,          

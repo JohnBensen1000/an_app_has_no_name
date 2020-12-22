@@ -1,22 +1,16 @@
 import sys, json
 
 from django.shortcuts import render
-from user_profile.models import *
+from user_profile.models import UserProfile, AccountInfo, Relationships
 from demographics.models import *
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from graph_data.models import *
-
 
 @csrf_exempt
-def search_creators(request):
+def search_creators(request, searchString=None):
 	try:
-		search = request.GET
-
-		searchString = search["searchString"]
-
 		objectList  = UserProfile.objects.filter(username__icontains=searchString)
 		creatorList = [{"username":user.username, "userID":user.userID} for user in objectList]
 
@@ -85,7 +79,7 @@ def get_followings(request, userID=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def start_following(request, followerID=None):
+def start_following(request, userID=None):
 	# TODO? Probably should add an option to 'block' a creator in this field
 	try:
 		following = request.POST
