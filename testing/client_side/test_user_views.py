@@ -24,7 +24,7 @@ if option == 0:
 	try:
 		while True:
 			searchString  = input()
-			newUrl = url + "users/" + searchString + "/"
+			newUrl = "search/" + url + "users/" + searchString + "/"
 
 			response = requests.get(newUrl)
 			print(response.text)

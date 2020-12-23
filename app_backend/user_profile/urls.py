@@ -6,8 +6,8 @@ from .views import *
 # future but are not supported yet
 
 urlpatterns = [
-    path('<slug:searchString>/',  						search_creators),	# GET
     path('new_user/',      								create_new_user), 	# POST
+    path('search/<slug:searchString>/',  				search_creators),	# GET
     path('<slug:userID>/',  							update_user),		# DELETE, GET, (POST)
     path('<slug:userID>/following/',                 	get_followings),	# GET
     path('<slug:userID>/following/new/',             	start_following), 	# POST
