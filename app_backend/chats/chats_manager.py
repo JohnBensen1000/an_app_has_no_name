@@ -1,12 +1,8 @@
-import concurrent.futures
-import logging
 import queue
-import random
 import threading
-import time
 import socket 
 
-class Messages:
+class ChatsManager:
 	def __init__(self):
 		self.queueDict = {}
 
@@ -20,7 +16,7 @@ class Messages:
 		self.mainThread = threading.Thread(target=self.__listen_for_connections)
 		self.mainThread.start()
 
-	def send(self, userID, message):
+	def send_message(self, userID, message):
 		if userID in self.queueDict:
 			self.queueDict[userID].put(message.encode('ascii'))
 
@@ -31,10 +27,10 @@ class Messages:
 			userQueue    = queue.Queue()
 			self.queueDict[userID] = userQueue
 
-			threading.Thread(target=self.__send_messages, 
+			threading.Thread(target=self.__manage_messages, 
 				args=(client, userID, userQueue)).start()  
 
-	def __send_messages(self, client, userID, userQueue):
+	def __manage_messages(self, client, userID, userQueue):
 		try:
 			while True:
 				client.send(userQueue.get()) 
@@ -42,15 +38,3 @@ class Messages:
 		except BrokenPipeError:
 			del self.queueDict[userID]
 			client.close()
-
-
-if __name__ == "__main__":
-	messages = Messages()
-	messages.start()
-	print("Started messaging")
-	while True:
-		time.sleep(1)
-		messages.send("john", "Hello")
-		messages.send("laura", "Hi")
-
-	
