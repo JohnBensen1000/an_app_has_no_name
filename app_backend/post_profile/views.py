@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .linked_list import *
 
 @csrf_exempt
-def update_posts(request, userID=None):
+def posts(request, userID=None):
 	try:
 		userProfile = UserProfile.objects.get(userID=userID)
 
@@ -30,7 +30,7 @@ def update_posts(request, userID=None):
 				demographics = postDemo,
 				creator      = userProfile
 			)
-			return HttpResponse("Successfully posted new post!")
+			return JsonResponse({"postID": newPost.postID})
 
 		else:
 			return HttpResponse("This method is not supported by this function.")
@@ -39,7 +39,7 @@ def update_posts(request, userID=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def get_recommended_posts(request, userID=None):
+def recommended_posts(request, userID=None):
 	try:
 		user       = UserProfile.objects.get(userID=userID)
 		userDemo   = np.array(user.demographics.get_list())
@@ -65,7 +65,7 @@ def get_recommended_posts(request, userID=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def record_watched(request, userID=None, postID=None):
+def watched(request, userID=None, postID=None):
 	try:
 		watchedJson = request.POST
 		user = UserProfile.objects.get(userID=userID)
@@ -96,6 +96,12 @@ def update_demographics(user, post, userRating):
 	
 	user.demographics.set_list(userDemo)
 	post.demographics.set_list(postDemo)
+
+# def following_posts(request, userID=None):
+# 	if request.method == "GET":
+# 		user = UserProfile.objects.get(userID=userID)
+
+# 		for 
 
 if __name__ == "__main__":
 	pass

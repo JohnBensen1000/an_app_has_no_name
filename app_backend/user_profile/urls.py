@@ -6,10 +6,10 @@ from .views import *
 # future but are not supported yet
 
 urlpatterns = [
-    path('new_user/',      								create_new_user), 	# POST
+    path('new_user/',      								new_user), 	        # GET, POST
     path('search/<slug:searchString>/',  				search_creators),	# GET
-    path('<slug:userID>/',  							update_user),		# DELETE, GET, (POST)
-    path('<slug:userID>/following/',                 	get_followings),	# GET
+    path('<slug:userID>/',  							user),		        # DELETE, GET, PUT, (POST)
+    path('<slug:userID>/following/',                 	following),	        # GET
     path('<slug:userID>/following/new/',             	start_following), 	# POST
     path('<slug:userID>/following/<slug:creatorID>/', 	update_following),	# DELETE, (GET), (POST)
     path('<slug:userID>/friends/',                		get_friends), 		# GET

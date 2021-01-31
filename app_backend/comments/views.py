@@ -1,4 +1,6 @@
 # export GOOGLE_APPLICATION_CREDENTIALS="/home/john/Downloads/an-app-has-no-name-6a351a8f0853.json"
+# export GOOGLE_APPLICATION_CREDENTIALS="/Users/johnbensen/Downloads/an-app-has-no-name-059c876a8538.json"
+
 import datetime
 import sys
 from google.cloud import firestore, firestore_v1

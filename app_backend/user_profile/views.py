@@ -3,7 +3,7 @@ import sys, json
 from django.shortcuts import render
 from user_profile.models import UserProfile, AccountInfo, Relationships
 from demographics.models import *
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -23,36 +23,42 @@ def search_creators(request, searchString=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def create_new_user(request):
+def new_user(request):
 	try:
-		userProfile = request.POST
+		if request.method == "POST":
+			newUser = request.POST
 
-		if UserProfile.objects.filter(userID=userProfile["userID"]).exists():
-			return HttpResponse("A user already has taken this user ID.") 
+			alreadyTaken = {
+				"userID": UserProfile.objects.filter(userID=newUser["userID"]).exists(),
+				"email": AccountInfo.objects.filter(email=newUser["email"]).exists(),
+				"phone": AccountInfo.objects.filter(phone=newUser["phone"]).exists(),
+			}
+			if True in alreadyTaken.values():
+				return JsonResponse(alreadyTaken)
 
-		demographics = [float(x) for x in userProfile["demographics"].split("[")[1].split("]")[0].split(",")]
-		userDemo     = Demographics.objects.create()
-		userDemo.set_list(demographics)
+			# demographics = [float(x) for x in userProfile["demographics"].split("[")[1].split("]")[0].split(",")]
+			# userDemo.set_list(demographics)
+			userDemo    = Demographics.objects.create()
+			accountInfo = AccountInfo.objects.create(
+				email=newUser["email"],
+				phone=newUser["phone"],
+				preferredLanguage=newUser["preferredLanguage"],
 
-		accountInfo = AccountInfo.objects.create(
-			email=userProfile["email"],
-    		phone=userProfile["phone"]
-		)
-		UserProfile.objects.create(
-			userID            = userProfile["userID"],
-			username          = userProfile["username"],
-			preferredLanguage = userProfile["preferredLanguage"],
-			accountInfo       = accountInfo,
-			demographics      = userDemo,
-		)
+			)
+			UserProfile.objects.create(
+				userID            = newUser["userID"],
+				username          = newUser["username"],
+				accountInfo       = accountInfo,
+				demographics      = userDemo,
+			)
 
-		return HttpResponse("Created new user!")
+			return HttpResponse(status=201)
 
 	except:
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def update_user(request, userID=None):
+def user(request, userID=None):
 	try:
 		if request.method == "GET":
 			user     = UserProfile.objects.get(userID=userID)
@@ -70,7 +76,7 @@ def update_user(request, userID=None):
 
 
 @csrf_exempt
-def get_followings(request, userID=None):
+def following(request, userID=None):
 	try:
 		follower = UserProfile.objects.get(userID=userID)
 		return HttpResponse(follower.get_followings())
@@ -122,10 +128,10 @@ def update_following(request, userID=None, creatorID=None):
 def get_friends(request, userID=None):
 	try:
 		friends = UserProfile.objects.get(userID=userID)
-		return HttpResponse(friends.get_friends())
+		return JsonResponse({'friends' : friends.get_friends()})
 
 	except:
-		return HttpResponse(str(sys.exc_info()[0]))
+		return JsonResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
 def become_friends(request, userID=None):

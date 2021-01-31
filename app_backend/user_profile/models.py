@@ -7,12 +7,12 @@ from demographics.models import Demographics
 class AccountInfo(models.Model):
     email = models.CharField(max_length=50) 
     phone = models.CharField(max_length=15) 
+    preferredLanguage = models.CharField(max_length=20)
 
 
 class UserProfile(models.Model):
     userID   = models.CharField(max_length=50) 
     username = models.CharField(max_length=20, default="")
-    preferredLanguage = models.CharField(max_length=20)
 
     accountInfo  = models.OneToOneField(AccountInfo,  on_delete=models.CASCADE, default=None)
     demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)
