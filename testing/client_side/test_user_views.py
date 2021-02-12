@@ -43,7 +43,9 @@ if option == 1:
 		demographics      = [random.uniform(0, 1) for a in range(19)]
 
 		email = username + "@gmail.com"
-		phone = "15164979872"
+		phone = ""
+		for a in range(10):
+			phone += str(random.randint(0, 10))
 
 		clientRequest = {
 			"userID":           userID,          

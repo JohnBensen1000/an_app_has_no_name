@@ -1,14 +1,28 @@
 import sys
 import numpy as np
+import glob
 
-from django.shortcuts import render
 from user_profile.models import UserProfile
 from post_profile.models import *
 from demographics.models import *
+from .linked_list import *
+
+from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
-from .linked_list import *
+from firebase_admin import credentials, initialize_app, storage
+from google.cloud import storage
+from google.cloud.storage import Blob
+
+
+# cred = credentials.Certificate("../an-app-has-no-name-059c876a8538.json")
+# initialize_app(cred, {'storageBucket': 'an-app-has-no-name.appspot.com'})
+
+client = storage.Client(project="an-app-has-no-name")
+bucket = client.get_bucket("an-app-has-no-name.appspot.com")
 
 @csrf_exempt
 def posts(request, userID=None):
@@ -23,6 +37,8 @@ def posts(request, userID=None):
 			return JsonResponse(userPosts)
 
 		if request.method == "POST":
+			imageFile = request.FILES['media']
+
 			postDemo = Demographics.objects.create()
 
 			postProfile = request.POST
@@ -30,6 +46,12 @@ def posts(request, userID=None):
 				demographics = postDemo,
 				creator      = userProfile
 			)
+
+			# uploads post to google cloud storage
+			blob = bucket.blob("%s/%s.png" % (userID, newPost.postID))
+			blob.content_type = "image/png"
+			blob.upload_from_file(imageFile)
+
 			return JsonResponse({"postID": newPost.postID})
 
 		else:
