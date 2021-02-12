@@ -87,20 +87,39 @@ def recommended_posts(request, userID=None):
 		return HttpResponse(str(sys.exc_info()[0]))
 
 @csrf_exempt
-def watched(request, userID=None, postID=None):
+def following_posts(request, userID=None):
 	try:
-		watchedJson = request.POST
-		user = UserProfile.objects.get(userID=userID)
-		post = PostProfile.objects.get(postID=postID)
+		user       = UserProfile.objects.get(userID=userID)
+		followings = user.get_followings()
 
-		update_demographics(user, post, float(watchedJson["userRating"]))
+		postsList = list()
+		for creator in followings:
+			for post in PostProfile.objects.filter(creator=creator):
+				postsList.append({"userID": creator.userID, "username": creator.username, "postID": post.postID})
 
-		post.watchedBy.add(user)
-
-		return HttpResponse("Successfully recorded that user watched a video.")
+		return JsonResponse({"postsList": postsList})
 
 	except:
-		return HttpResponse(str(sys.exc_info()[0]))
+		print("  [x]", str(sys.exc_info()[0]))
+		return HttpResponse(status=500)
+
+@csrf_exempt
+def watched(request, userID=None, postID=None):
+	try:
+		if request.method == "POST":
+			watchedJson = request.POST
+			user = UserProfile.objects.get(userID=userID)
+			post = PostProfile.objects.get(postID=postID)
+
+			update_demographics(user, post, float(watchedJson["userRating"]))
+
+			post.watchedBy.add(user)
+
+			return HttpResponse(status=201)
+
+	except:
+		print("  [x]", str(sys.exc_info()[0]))
+		return HttpResponse(status=500)
 
 def update_demographics(user, post, userRating):
 	stepSize = .01
@@ -118,12 +137,6 @@ def update_demographics(user, post, userRating):
 	
 	user.demographics.set_list(userDemo)
 	post.demographics.set_list(postDemo)
-
-# def following_posts(request, userID=None):
-# 	if request.method == "GET":
-# 		user = UserProfile.objects.get(userID=userID)
-
-# 		for 
 
 if __name__ == "__main__":
 	pass

@@ -47,7 +47,8 @@ class UserProfile(models.Model):
     def get_followings(self):
         allFollowings = [relation.creator for relation in 
                             self.followings.filter(relation=Relationships.following)]
-        return self.__parse_user_list(allFollowings)
+        return allFollowings
+        # return self.__parse_user_list(allFollowings)
 
     def get_followers(self):
         allFollowers = [relation.follower for relation in 

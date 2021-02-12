@@ -18,7 +18,7 @@ class PostProfile(models.Model):
 
 	watchedBy = models.ManyToManyField(
 		UserProfile,
-		related_name="watched_by",
+		related_name="watched",
 	)
 
 
