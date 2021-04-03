@@ -8,6 +8,7 @@ class AccountInfo(models.Model):
     email = models.CharField(max_length=50) 
     phone = models.CharField(max_length=15) 
     preferredLanguage = models.CharField(max_length=20)
+    profileType       = models.CharField(max_length=10, default="none")
 
 
 class UserProfile(models.Model):
@@ -48,7 +49,6 @@ class UserProfile(models.Model):
         allFollowings = [relation.creator for relation in 
                             self.followings.filter(relation=Relationships.following)]
         return allFollowings
-        # return self.__parse_user_list(allFollowings)
 
     def get_followers(self):
         allFollowers = [relation.follower for relation in 

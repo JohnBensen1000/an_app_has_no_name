@@ -6,8 +6,9 @@ from demographics.models import Demographics
 
 # Create your models here.
 class PostProfile(models.Model):
-	postID  = models.AutoField(primary_key=True)
-	private = models.BooleanField(default=False)
+	postID      = models.AutoField(primary_key=True)
+	private     = models.BooleanField(default=False)
+	isImage     = models.BooleanField(default=False)
 	timeCreated = models.DateTimeField(default=datetime.now) 
 
 	demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)

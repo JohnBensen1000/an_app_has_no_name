@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-import glob
 
 from user_profile.models import UserProfile
 from post_profile.models import *
@@ -17,10 +16,6 @@ from firebase_admin import credentials, initialize_app, storage
 from google.cloud import storage
 from google.cloud.storage import Blob
 
-
-# cred = credentials.Certificate("../an-app-has-no-name-059c876a8538.json")
-# initialize_app(cred, {'storageBucket': 'an-app-has-no-name.appspot.com'})
-
 client = storage.Client(project="an-app-has-no-name")
 bucket = client.get_bucket("an-app-has-no-name.appspot.com")
 
@@ -29,83 +24,101 @@ def posts(request, userID=None):
 	try:
 		userProfile = UserProfile.objects.get(userID=userID)
 
+		# Returns a list of all of a user's non-private posts.
 		if request.method == "GET":
-			userPosts = {
-				"userPosts": [{"id":post.postID, "timeCreated":post.timeCreated} 
-								for post in userProfile.created.all()]
-			}
-			return JsonResponse(userPosts)
+			userPostsList = []
+			for post in userProfile.created.all():
+				if post.private == False:
+					userPostsList.append({
+						"userID": userProfile.userID, 
+						"username": userProfile.username, 
+						"postID": post.postID, 
+						"isImage": post.isImage,
+					})	
+					
+			return JsonResponse({"userPosts": userPostsList})
 
+		# Receives meta-data about a post and the post's image of video file. Creates a new post
+		# entity and uploads the post file to google storage in the right location and with the
+		# right file extension and content type. 
 		if request.method == "POST":
-			imageFile = request.FILES['media']
-
 			postDemo = Demographics.objects.create()
 
-			postProfile = request.POST
 			newPost = PostProfile.objects.create(
 				demographics = postDemo,
-				creator      = userProfile
+				creator      = userProfile,
+				isImage	     = request.POST["contentType"] == 'image',
 			)
-
-			# uploads post to google cloud storage
-			blob = bucket.blob("%s/%s.png" % (userID, newPost.postID))
-			blob.content_type = "image/png"
-			blob.upload_from_file(imageFile)
-
-			return JsonResponse({"postID": newPost.postID})
-
-		else:
-			return HttpResponse("This method is not supported by this function.")
-
-	except:
-		return HttpResponse(str(sys.exc_info()[0]))
-
-@csrf_exempt
-def recommended_posts(request, userID=None):
-	try:
-		user       = UserProfile.objects.get(userID=userID)
-		userDemo   = np.array(user.demographics.get_list())
-		linkedList = LinkedList()
-
-		#print(" [x] UserID: %s, sumDemo: %s, demographics: %s" % (userID, str(sum(userDemo)), str(np.round(userDemo, 2)))) 
-		
-		for post in PostProfile.objects.exclude():
-			#print("    [x] PostID: %s, creatorID: %s, demographics: %s" % (post.postID, post.creator.userID, str(post.demographics.get_list())))
 			
-			if not (post.watchedBy.filter(userID=userID).exists() or post.creator.userID == userID):
-					postDemo = np.array(post.demographics.get_list())
-					score    = np.dot(postDemo, userDemo)
-					score    = score / (1 + np.abs(score))
+			if request.POST["contentType"] == 'image':
+				blob = bucket.blob("%s/%s.png" % (userID, postID))
+				blob.content_type = "image/png"
+			else:
+				blob = bucket.blob("%s/%s.mp4" % (userID, postID))
+				blob.content_type = "video/mp4"
+			blob.upload_from_file(request.FILES['media'])
 
-					postNode = PostNode(post.creator.userID, post.postID, score)
-					linkedList.add_node(postNode)
-					#print("    [x] Score: %s" % str(score))
-		
-		return JsonResponse({"Posts": linkedList.get_list_of_nodes()})
+			return HttpResponse(status=201)
 
 	except:
-		return HttpResponse(str(sys.exc_info()[0]))
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
 
 @csrf_exempt
-def following_posts(request, userID=None):
+def recommendations(request, userID=None):
 	try:
-		user       = UserProfile.objects.get(userID=userID)
-		followings = user.get_followings()
+		# Returns a list of recommended posts for the user. TODO: Document how the algorithm works. 
+		if method.request == "GET":
+			user       = UserProfile.objects.get(userID=userID)
+			userDemo   = np.array(user.demographics.get_list())
+			linkedList = LinkedList()
+			
+			for post in PostProfile.objects.exclude():
+				if not (post.watchedBy.filter(userID=userID).exists() or post.creator.userID == userID):
+						postDemo = np.array(post.demographics.get_list())
+						score    = np.dot(postDemo, userDemo)
+						score    = score / (1 + np.abs(score))
 
-		postsList = list()
-		for creator in followings:
-			for post in PostProfile.objects.filter(creator=creator):
-				postsList.append({"userID": creator.userID, "username": creator.username, "postID": post.postID})
-
-		return JsonResponse({"postsList": postsList})
+						postNode = PostNode(post.creator.userID, post.postID, score)
+						linkedList.add_node(postNode)
+			
+			return JsonResponse({"Posts": linkedList.get_list_of_nodes()})
 
 	except:
-		print("  [x]", str(sys.exc_info()[0]))
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+
+@csrf_exempt
+def following(request, userID=None):
+	try:
+		# Returns a list of all post entities from every creator that the user is following that 
+		# the user has not already watched. 
+		if request.method == "GET":
+			user       = UserProfile.objects.get(userID=userID)
+			followings = user.get_followings()
+
+			postsList = list()
+			for creator in followings:
+				for post in PostProfile.objects.filter(creator=creator):
+					if user not in post.watchedBy.all():
+						postsList.append({
+							"userID": creator.userID, 
+							"username": creator.username, 
+							"postID": post.postID, 
+							"isImage": post.isImage,
+						})
+
+			return JsonResponse({"postsList": postsList})
+
+	except:
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 @csrf_exempt
 def watched(request, userID=None, postID=None):
 	try:
+		# Creates a watchedBy entity to record that a user has watched a post. Also saves the 
+		# feedback for the post from the user (whether or not the user liked the post).
 		if request.method == "POST":
 			watchedJson = request.POST
 			user = UserProfile.objects.get(userID=userID)
@@ -118,7 +131,7 @@ def watched(request, userID=None, postID=None):
 			return HttpResponse(status=201)
 
 	except:
-		print("  [x]", str(sys.exc_info()[0]))
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 def update_demographics(user, post, userRating):
@@ -137,6 +150,3 @@ def update_demographics(user, post, userRating):
 	
 	user.demographics.set_list(userDemo)
 	post.demographics.set_list(postDemo)
-
-if __name__ == "__main__":
-	pass

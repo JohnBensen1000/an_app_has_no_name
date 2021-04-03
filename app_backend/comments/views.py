@@ -9,14 +9,19 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 db = firestore.Client()
-print("Connected to Firestore.")
 
 @csrf_exempt
-def post_comment(request, postID=None, userID=None):
+def comments(request, postID=None):
     try:
+        # Recieves a json object with three fields: "comment", "userID", and "path". "comment" contains 
+        # the actual comment itself. "userID" is the userID of the user who posted the comment. "path" 
+        # is the directory of where the new comment will be stored in the firestore database. The "path"
+        # string will be stored in the database so that when someone posts a comment responding to this 
+        # comment, the new comment will know where to be placed in the database.    
         if request.method == "POST":
             newComment = request.POST
-            path = newComment["path"] + "/c"
+            userID     = newComment["userID"]
+            path       = newComment["path"] + "/c"
 
             collectionRef = db.collection("Comments/%d" % postID + path)
             userComments  = collectionRef.where('userID', '==', userID).get()
@@ -30,52 +35,35 @@ def post_comment(request, postID=None, userID=None):
                 u'comment': newComment["comment"],
                 u'path': path,
             })
-            return HttpResponse("Successfully posted comment.")
+            return HttpResponse(status=201)
 
-        else:
-            return HttpResponse("This request method is currently not supported by this view.")
+        # Gets a list of the comments of a post. 
+        if request.method == "GET":
+            postDoc      = db.collection('Comments').document(str(postID))
+            collection   = postDoc.collection("c")
+            commentsList = get_all_comments(collection, 0)
+
+            return JsonResponse({'comments': commentsList})
 
     except:
-        return HttpResponse(str(sys.exc_info()[1]))
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)
 
+def get_all_comments(collection, level):
+    # Comments are stored such that each response comment is stored in a collection 
+    # that is under the parent comment. Therefore, this function recursively gets
+    # to every comment and creates a list of all comments.
 
-def get_sub_comments(collection):
     allComments = []
 
     for commentDoc in collection.order_by('datePosted').stream():
-        commentDict   = commentDoc.to_dict()
+        commentDict          = commentDoc.to_dict()
+        commentDict["level"] = level
+        del commentDict["datePosted"]
+
         subCollection = collection.document(commentDoc.id).collection("c")
 
-        commentDict["subComments"] = get_sub_comments(subCollection)
         allComments.append(commentDict)
+        allComments += get_all_comments(subCollection, level + 1)
 
     return allComments
-
-def delete_doc_and_sub_collections(doc):
-    for commentDoc in doc.collection('c').stream():
-        delete_doc_and_sub_collections(doc.collection('c').document(commentDoc.id))
-
-    doc.delete()
-
-@csrf_exempt
-def access_comment(request, postID=None):
-    try:
-        if request.method == "GET":
-            postDoc    = db.collection('Comments').document(str(postID))
-            collection = postDoc.collection("c")
-            response   = {"comments": get_sub_comments(collection)}
-
-            return JsonResponse(response)
-
-        if request.method == "DELETE":
-            postDoc = db.collection('Comments').document(str(postID))
-            delete_doc_and_sub_collections(postDoc)
-
-            return HttpResponse(status=204)
-
-    except:
-        return HttpResponse(str(sys.exc_info()))
-
-
-
-    

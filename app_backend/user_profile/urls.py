@@ -6,13 +6,11 @@ from .views import *
 # future but are not supported yet
 
 urlpatterns = [
-    path('new_user/',      								new_user), 	        # GET, POST
-    path('search/<slug:searchString>/',  				search_creators),	# GET
-    path('<slug:userID>/',  							user),		        # DELETE, GET, PUT, (POST)
-    path('<slug:userID>/following/',                 	following),	        # GET
-    path('<slug:userID>/following/new/',             	start_following), 	# POST
-    path('<slug:userID>/following/<slug:creatorID>/', 	update_following),	# DELETE, (GET), (POST)
-    path('<slug:userID>/friends/',                		get_friends), 		# GET
-    path('<slug:userID>/friends/new/',            		become_friends), 	# POST
-    path('<slug:userID>/friends/<slug:friendID>/', 		update_friendship),	# DELETE, (GET), (POST)
+    path('search/<slug:searchString>/',  				creators),	        # GET
+    path('<slug:userID>/',  							user),		        # GET, POST, DELETE, (PUT)
+    path('<slug:userID>/profile/',  					profile),		    # GET, POST
+    path('<slug:userID>/following/',                 	following_list),    # GET
+    path('<slug:userID>/following/<slug:creatorID>/', 	following),	        # GET, POST, DELETE
+    path('<slug:userID>/friends/',                		friends_list), 		# GET
+    # path('<slug:userID>/friends/<slug:friendID>/', 		friend),	        # DELETE, (GET), (POST)
 ]
