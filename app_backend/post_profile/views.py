@@ -51,10 +51,10 @@ def posts(request, userID=None):
 			)
 			
 			if request.POST["contentType"] == 'image':
-				blob = bucket.blob("%s/%s.png" % (userID, postID))
+				blob = bucket.blob("%s/%s.png" % (userID, newPost.postID))
 				blob.content_type = "image/png"
 			else:
-				blob = bucket.blob("%s/%s.mp4" % (userID, postID))
+				blob = bucket.blob("%s/%s.mp4" % (userID, newPost.postID))
 				blob.content_type = "video/mp4"
 			blob.upload_from_file(request.FILES['media'])
 
@@ -144,7 +144,6 @@ def update_demographics(user, post, userRating):
 	for i, demo in enumerate(userDemo):
 		if demo < 0.0: userDemo[i] = 0
 		if demo > 1.0: userDemo[i] = 1 
-		print(demo, userDemo[i], demo < 0.0)
 
 	postDemo += stepSize * userRating * userDemo
 	

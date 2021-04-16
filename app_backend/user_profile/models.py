@@ -15,6 +15,9 @@ class UserProfile(models.Model):
     userID   = models.CharField(max_length=50) 
     username = models.CharField(max_length=20, default="")
 
+    deviceToken = models.TextField(default="")
+    firebaseSub = models.TextField(default="")    # "sub" field of id token
+
     accountInfo  = models.OneToOneField(AccountInfo,  on_delete=models.CASCADE, default=None)
     demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)
 

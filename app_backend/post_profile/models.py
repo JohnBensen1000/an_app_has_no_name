@@ -9,6 +9,7 @@ class PostProfile(models.Model):
 	postID      = models.AutoField(primary_key=True)
 	private     = models.BooleanField(default=False)
 	isImage     = models.BooleanField(default=False)
+	isVideo     = models.BooleanField(default=False) # remove this field 
 	timeCreated = models.DateTimeField(default=datetime.now) 
 
 	demographics = models.OneToOneField(Demographics, on_delete=models.CASCADE)

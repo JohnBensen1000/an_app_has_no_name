@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'authenticate',
     'user_profile',
     'post_profile',
     'comments',

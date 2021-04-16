@@ -6,7 +6,8 @@ from demographics.models import *
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 @csrf_exempt
 def creators(request, searchString=None):
@@ -26,6 +27,26 @@ def creators(request, searchString=None):
 		print(" [ERROR]", sys.exc_info()[0])
 		return HttpResponse(status=500)
 
+@csrf_exempt 
+def identifiers(request):
+	try:
+		# Checks is any unique identifiers have been taken for a user account. These unique identifiers
+		# are: "userID", "email", and "phone". Returns a json object that assigns a boolean value to 
+		# each field, true if it's taken, false otherwise. 
+		if request.method == "POST":
+			newUser = request.POST
+
+			alreadyTaken = {
+				"userID": UserProfile.objects.filter(userID=newUser["userID"]).exists(),
+				"email": AccountInfo.objects.filter(email=newUser["email"]).exists(),
+				"phone": AccountInfo.objects.filter(phone=newUser["phone"]).exists(),
+			}
+			return JsonResponse(alreadyTaken)
+
+	except:
+		print(" [ERROR]", sys.exc_info()[0])
+		return HttpResponse(status=500)
+
 @csrf_exempt
 def user(request, userID=None):
 	try:
@@ -36,21 +57,14 @@ def user(request, userID=None):
 
 			return JsonResponse(userJson)
 
-		# Recieves a json object containing fields that correspond to a new user's account. The fields of 
-		# the json object will be: "userID", "email", "phone", "preferredLangauge", "username". The fields 
-		# "userID", "email", and "phone" are all unique identifiers, so if the value provided for one or 
-		# more of these is already taken by another user, a list of all taken fields will be returned. If 
-		# none of these fields are taken, then a new account is created with the given values. 
+		# Recieves a json object containing fields that correspond to a new user's account. First creates
+		# two entities: userDemo and accountInfo, both of which will have a one-to-one relationship with
+		# the new userProfile. Then creates a new UserProfile for the new user. 
 		if request.method == "POST":
 			newUser = request.POST
 
-			alreadyTaken = {
-				"userID": UserProfile.objects.filter(userID=newUser["userID"]).exists(),
-				"email": AccountInfo.objects.filter(email=newUser["email"]).exists(),
-				"phone": AccountInfo.objects.filter(phone=newUser["phone"]).exists(),
-			}
-			if True in alreadyTaken.values():
-				return JsonResponse(alreadyTaken)
+			token  = newUser["idToken"]
+			idInfo = id_token.verify_firebase_token(token, requests.Request())
 
 			userDemo    = Demographics.objects.create()
 			accountInfo = AccountInfo.objects.create(
@@ -60,10 +74,12 @@ def user(request, userID=None):
 
 			)
 			UserProfile.objects.create(
-				userID            = newUser["userID"],
-				username          = newUser["username"],
-				accountInfo       = accountInfo,
-				demographics      = userDemo,
+				userID       = newUser["userID"],
+				username     = newUser["username"],
+				deviceToken  = newUser["deviceToken"],
+				firebaseSub  = idInfo["sub"],
+				accountInfo  = accountInfo,
+				demographics = userDemo,
 			)
 
 			return HttpResponse(status=201)
@@ -133,7 +149,7 @@ def following(request, userID=None, creatorID=None):
 			return HttpResponse(status=201)	
 
 		if request.method == "DELETE":
-			Relationships.objects.get(follower=follower, creator=creator).delete()
+			Relationships.objects.get(follower=user, creator=creator).delete()
 			return HttpResponse(status=201)
 
 	except:
@@ -142,7 +158,7 @@ def following(request, userID=None, creatorID=None):
 
 
 @csrf_exempt
-def friends_list(request, userID=None):
+def friends(request, userID=None):
 	try:
 		# Returns a list of all of the user's friends.
 		if request.method == "GET":
