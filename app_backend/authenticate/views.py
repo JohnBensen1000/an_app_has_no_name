@@ -25,8 +25,8 @@ def authentication(request):
             userProfile.deviceToken = deviceToken
             userProfile.save()
 
-            return JsonResponse({"userID": userProfile.userID, "authToken": "12345"})
+            return JsonResponse({"userID": userProfile.userID, "username": userProfile.username, "authToken": "12345"})
 
     except:
-        print(" [ERROR]", sys.exc_info()[0])
+        print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)

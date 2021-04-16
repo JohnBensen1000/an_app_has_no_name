@@ -10,8 +10,8 @@ urlpatterns = [
     path('check/',                                      identifiers),                       
     path('<slug:userID>/',  							user),		                        # GET, POST, DELETE, (PUT)
     path('<slug:userID>/profile/',  					profile),		                    # GET, POST
+    path('<slug:userID>/followers/',                    followers),                         # GET
     path('<slug:userID>/following/',                 	following_list),                    # GET
     path('<slug:userID>/following/<slug:creatorID>/', 	following),	                        # GET, POST, DELETE
     path('<slug:userID>/friends/',                		friends), 		                    # GET
-    # path('<slug:userID>/friends/<slug:friendID>/', 		friend),	                    # DELETE, (GET), (POST)
 ]

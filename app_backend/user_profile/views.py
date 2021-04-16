@@ -1,4 +1,5 @@
 import sys, json
+import requests
 
 from django.shortcuts import render
 from user_profile.models import UserProfile, AccountInfo, Relationships
@@ -6,8 +7,11 @@ from demographics.models import *
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+
 from google.oauth2 import id_token
-from google.auth.transport import requests
+import google.auth.transport
+
+serverToken = 'AAAALGfgH5A:APA91bH1FgqgJOZ4LQds7XgnRxatrIxZgP9hzvx8MItG8fsgxDGAgR9XocFWh8qwNfCxBaj-eddA5DwS2r2SNRbNU2iOIJvu-QaXo_2aPf-DujhqdMhz9H3aW5ZItBfXuV0JZ5BGQXDV'
 
 @csrf_exempt
 def creators(request, searchString=None):
@@ -24,7 +28,7 @@ def creators(request, searchString=None):
 				return JsonResponse({"creatorsList": creatorList})
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 @csrf_exempt 
@@ -44,7 +48,7 @@ def identifiers(request):
 			return JsonResponse(alreadyTaken)
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 @csrf_exempt
@@ -64,7 +68,7 @@ def user(request, userID=None):
 			newUser = request.POST
 
 			token  = newUser["idToken"]
-			idInfo = id_token.verify_firebase_token(token, requests.Request())
+			idInfo = id_token.verify_firebase_token(token, google.auth.transport.requests.Request())
 
 			userDemo    = Demographics.objects.create()
 			accountInfo = AccountInfo.objects.create(
@@ -76,7 +80,6 @@ def user(request, userID=None):
 			UserProfile.objects.create(
 				userID       = newUser["userID"],
 				username     = newUser["username"],
-				deviceToken  = newUser["deviceToken"],
 				firebaseSub  = idInfo["sub"],
 				accountInfo  = accountInfo,
 				demographics = userDemo,
@@ -92,7 +95,7 @@ def user(request, userID=None):
 			return HttpResponse("Deleted user account")
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 @csrf_exempt
@@ -116,7 +119,7 @@ def profile(request, userID=None):
 			return HttpResponse(status=201)
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 
@@ -129,12 +132,14 @@ def following_list(request, userID=None):
 			return HttpResponse(user.get_followings())
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
 @csrf_exempt
 def following(request, userID=None, creatorID=None):
-	# Handles the one way following relationship between a user and a creator.
+	# Handles the one way following relationship between a user and a creator. When a user starts
+	# or stops (POST or DELETE, respectively) following another user, sends a push notification to 
+	# the other user, updating the number of new followers that the other user has. 
 
 	user    = UserProfile.objects.get(userID=userID)
 	creator = UserProfile.objects.get(userID=creatorID)
@@ -146,83 +151,55 @@ def following(request, userID=None, creatorID=None):
 
 		if request.method == "POST":
 			Relationships.objects.create(follower=user, creator=creator)
+			send_new_followers(creator)
 			return HttpResponse(status=201)	
 
 		if request.method == "DELETE":
 			Relationships.objects.get(follower=user, creator=creator).delete()
+			send_new_followers(creator)
 			return HttpResponse(status=201)
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+def send_new_followers(userProfile):
+	# Sends a push notification to a user with a list of all of their new followers. Sends
+	# notification through google firebase to a device (identified by userProfile.deviceToken).
+
+	headers = {
+		'Content-Type': 'application/json',
+		'Authorization': 'key=' + serverToken,
+	}
+	body = {
+		'notification': {
+			'body': {"userID": userProfile.userID, "new_followers": userProfile.get_followers()}
+		},
+		'to': userProfile.deviceToken,
+		'priority': 'high',
+	}
+	response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
+
+def followers(request, userID=None):
+	try:
+		# Returns a list of all of the user's new followers.
+		if request.method == "GET":
+			user = UserProfile.objects.get(userID=userID)
+			return JsonResponse({'new_followers' : user.get_followers()})
+ 
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
 
 @csrf_exempt
 def friends(request, userID=None):
 	try:
 		# Returns a list of all of the user's friends.
 		if request.method == "GET":
-			friends = UserProfile.objects.get(userID=userID)
-			return JsonResponse({'friends' : friends.get_friends()})
+			user = UserProfile.objects.get(userID=userID)
+			return JsonResponse({'friends' : user.get_friends()})
 
 	except:
-		print(" [ERROR]", sys.exc_info()[0])
+		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-# @csrf_exempt
-# def friends(request, userID=None):
-# 	try:
-
-# 		if request.method == "POST":
-# 			newFriends  = request.POST
-# 			newFriendID = newFriends["newFriendID"]
-
-# 			user      = UserProfile.objects.get(userID=userID)
-# 			newFriend = UserProfile.objects.get(userID=newFriendID)
-
-# 			if user.allFriends.filter(userID=newFriend):
-# 				return HttpResponse("User is already friends with the other user.")
-
-# 			else:
-# 				user.allFriends.add(newFriend)
-# 				return HttpResponse("Successfully started a new friendship!")
-
-# 	except:
-# 		print(" [ERROR]", sys.exc_info()[0])
-# 		return HttpResponse(status=500)
-
-# @csrf_exempt
-# def become_friends(request, userID=None):
-# 	try:
-# 		newFriends  = request.POST
-# 		newFriendID = newFriends["newFriendID"]
-
-# 		user      = UserProfile.objects.get(userID=userID)
-# 		newFriend = UserProfile.objects.get(userID=newFriendID)
-
-# 		if user.allFriends.filter(userID=newFriend):
-# 			return HttpResponse("User is already friends with the other user.")
-
-# 		else:
-# 			user.allFriends.add(newFriend)
-# 			return HttpResponse("Successfully started a new friendship!")
-
-# 	except:
-# 		return HttpResponse(str(sys.exc_info()[0]))
-
-# @csrf_exempt
-# def update_friendship(request, userID=None, friendID=None):
-# 	try:
-# 		if request.method == "DELETE":
-# 			user   = UserProfile.objects.get(userID=userID)
-# 			friend = UserProfile.objects.get(userID=friendID)
-
-# 			if not user.allFriends.filter(userID=friendID):
-# 				return HttpResponse("User is not friends with the other user.")
-
-# 			else:
-# 				user.allFriends.remove(friend)
-# 				return HttpResponse("Successfully started a new friendship!")
-
-# 	except:
-# 		return HttpResponse(str(sys.exc_info()[0]))

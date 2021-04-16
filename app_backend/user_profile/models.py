@@ -55,17 +55,28 @@ class UserProfile(models.Model):
 
     def get_followers(self):
         allFollowers = [relation.follower for relation in 
-                            self.followers.filter(relation=Relationships.following)]
-        return self.__parse_user_list(allFollowers)
+            self.followers.filter(relation=Relationships.following)]
+        allFollowings = [relation.creator for relation in 
+            self.followings.filter(relation=Relationships.following)]
+
+        followers = [user for user in allFollowers if user not in allFollowings]
+
+        return self.__parse_user_list(followers)
 
     def get_friends(self):
-        allFriends = self.allFriends.all()
+        allFollowers = [relation.follower for relation in 
+            self.followers.filter(relation=Relationships.following)]
+        allFollowings = [relation.creator for relation in 
+            self.followings.filter(relation=Relationships.following)]
+
+        allFriends = [user for user in allFollowers if user in allFollowings]
+
         return self.__parse_user_list(allFriends)
 
 
     def __parse_user_list(self, userList):
         if userList == []: 
-            return None
+            return []
         return [{"username":user.username, "userID":user.userID} 
             for user in userList]
 
