@@ -2,7 +2,7 @@ import sys, json
 import requests
 
 from django.shortcuts import render
-from user_profile.models import UserProfile, AccountInfo, Relationships
+from user_profile.models import *
 from demographics.models import *
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -149,13 +149,39 @@ def following(request, userID=None, creatorID=None):
 		if request.method == "GET":
 			return JsonResponse({"following_bool": (creator in user.get_followings())})
 
+		# Most of the functionality in this section is based on what value the Boolean field, "newFollower",
+		# in a Relationship entity should be. If "followBack" is a field in the POST body, then a user has 
+		# decided to either follow back or not to follow back a new follower. Either way, set the newFollower 
+		# field of the user-follower Relationship to False. If "followBack" is not a field in the POST body, 
+		# then create a new Relationship entity. Set "newFollower" to True if the creator does not currently 
+		# follow the user.
 		if request.method == "POST":
-			Relationships.objects.create(follower=user, creator=creator)
+			if "followBack" in request.POST:
+				if request.POST['followBack'] == 'true':
+					Relationships.objects.create(
+						follower    = user, 
+						creator     = creator, 
+						newFollower = False
+					)
+
+				followingRel = Relationships.objects.get(follower=creator, creator=user)
+				followingRel.newFollower = False
+				followingRel.save()
+
+			else:
+				newFollower = not Relationships.objects.filter(follower=creator, creator=user).exists()
+				Relationships.objects.create(
+					follower    = user, 
+					creator     = creator, 
+					newFollower = newFollower
+				)
+
 			send_new_followers(creator)
 			return HttpResponse(status=201)	
 
 		if request.method == "DELETE":
 			Relationships.objects.get(follower=user, creator=creator).delete()
+
 			send_new_followers(creator)
 			return HttpResponse(status=201)
 
@@ -180,12 +206,22 @@ def send_new_followers(userProfile):
 	}
 	response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
 
+@csrf_exempt
 def followers(request, userID=None):
 	try:
-		# Returns a list of all of the user's new followers.
+		# Returns a list of all of the user's new followers. Only looks at users that are 
+		# currently following the user with the field "newFollower" set to True.
+
 		if request.method == "GET":
 			user = UserProfile.objects.get(userID=userID)
-			return JsonResponse({'new_followers' : user.get_followers()})
+
+			allFollowersObjects = [relation.follower for relation in 
+				user.followers.filter(relation=Relationships.following).filter(newFollower=True)]
+			
+			allFollowers = [{"username":follower.username, "userID":follower.userID} 
+            	for follower in allFollowersObjects]
+
+			return JsonResponse({'new_followers' : allFollowers})
  
 	except:
 		print(" [ERROR]", sys.exc_info())

@@ -26,7 +26,7 @@ class UserProfile(models.Model):
         through='Relationships', 
         symmetrical=False
     )
-    allFriends = models.ManyToManyField('self')
+    # allFriends = models.ManyToManyField('self')
 
 
     def get_user_info_json(self):
@@ -84,14 +84,15 @@ class UserProfile(models.Model):
 class Relationships(models.Model):
     following = 0
     blocked   = 1
-
+    
     RELATION_TYPE = (
         (following, 'Following'),
         (blocked, 'Blocked'),
     )
 
-    follower = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="followings")
-    creator  = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="followers")
-    relation = models.IntegerField(choices=RELATION_TYPE, default=following)
+    follower    = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="followings")
+    creator     = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="followers")
+    relation    = models.IntegerField(choices=RELATION_TYPE, default=following)
+    newFollower = models.BooleanField(default=True)
 
 
