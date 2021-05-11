@@ -1,23 +1,60 @@
 import sys
 import numpy as np
+from datetime import datetime
 
 from user_profile.models import UserProfile
-from post_profile.models import *
-from demographics.models import *
+from demographics.models import Demographics
+from .models import PostProfile
 from .linked_list import *
 
-from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 
-from firebase_admin import credentials, initialize_app, storage
-from google.cloud import storage
-from google.cloud.storage import Blob
+from firebase_admin import storage
+from google.cloud import storage, firestore
+
+db = firestore.Client()
 
 client = storage.Client(project="an-app-has-no-name")
 bucket = client.get_bucket("an-app-has-no-name.appspot.com")
+
+@csrf_exempt
+def chat(request, chatName=None):
+	try:
+		
+		# Handles uploading a new post that is part of a chat. The file name is based on the datetime
+		# that the file is recieved. Uploads the file to google storage with the appropriate directory,
+		# file extension, and content type. Then saves the file location and type in the corrent chat 
+		# document. TODO: Make a safer way to store the file's download URL that does not involve making
+		# it publicly available. 
+		if request.method == "POST":
+			fileName = datetime.now().strftime("%m%d%Y%H:%M:%S")
+
+			if request.POST["contentType"] == 'image':
+				blob = bucket.blob("%s/%s.png" % (chatName, fileName))
+				blob.content_type = "image/png"
+			else:
+				blob = bucket.blob("%s/%s.mp4" % (chatName, fileName))
+				blob.content_type = "video/mp4"
+
+			blob.upload_from_file(request.FILES['media'])
+			blob.make_public()
+			
+			docRef = db.collection('Chats').document(chatName).collection("chats").document("1")
+			docRef.update({'conversation': firestore.ArrayUnion([{
+				'sender': request.POST['sender'],
+				'isPost': True,
+				'post': {
+					'postURL': blob.public_url,
+					'isImage': request.POST["contentType"] == 'image'
+				}
+			}])})
+
+			return HttpResponse(status=201)
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)		
 
 @csrf_exempt
 def posts(request, userID=None):
@@ -56,7 +93,9 @@ def posts(request, userID=None):
 			else:
 				blob = bucket.blob("%s/%s.mp4" % (userID, newPost.postID))
 				blob.content_type = "video/mp4"
+
 			blob.upload_from_file(request.FILES['media'])
+			blob.make_public()
 
 			return HttpResponse(status=201)
 
@@ -68,7 +107,7 @@ def posts(request, userID=None):
 def recommendations(request, userID=None):
 	try:
 		# Returns a list of recommended posts for the user. TODO: Document how the algorithm works. 
-		if method.request == "GET":
+		if request.method == "GET":
 			user       = UserProfile.objects.get(userID=userID)
 			userDemo   = np.array(user.demographics.get_list())
 			linkedList = LinkedList()
@@ -100,13 +139,19 @@ def following(request, userID=None):
 			postsList = list()
 			for creator in followings:
 				for post in PostProfile.objects.filter(creator=creator):
-					if user not in post.watchedBy.all():
-						postsList.append({
-							"userID": creator.userID, 
-							"username": creator.username, 
-							"postID": post.postID, 
-							"isImage": post.isImage,
-						})
+					postsList.append({
+						"userID": creator.userID, 
+						"username": creator.username, 
+						"postID": post.postID, 
+						"isImage": post.isImage,
+					})
+					# if user not in post.watchedBy.all():
+					# 	postsList.append({
+					# 		"userID": creator.userID, 
+					# 		"username": creator.username, 
+					# 		"postID": post.postID, 
+					# 		"isImage": post.isImage,
+					# 	})
 
 			return JsonResponse({"postsList": postsList})
 
