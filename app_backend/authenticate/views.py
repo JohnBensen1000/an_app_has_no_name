@@ -1,10 +1,12 @@
+import sys
+
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-from user_profile.models import UserProfile, AccountInfo, Relationships
+from user_profile.models import UserProfile
 
 # Create your views here.
 @csrf_exempt
@@ -16,6 +18,7 @@ def authentication(request):
         # userProfile entity associated with the user's Firebase account. When the correct userProfile is
         # found, updates the userProfile.deviceToken field and returns the userID and an authentication token. 
         # TODO: Actually make authToken secure. 
+
         if request.method == "POST":
             deviceToken = request.POST["deviceToken"]
             idToken     = request.POST["idToken"]

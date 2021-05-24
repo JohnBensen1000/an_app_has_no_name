@@ -1,12 +1,10 @@
 import sys, json
 import requests
 
-from django.shortcuts import render
-from user_profile.models import *
-from demographics.models import *
+from user_profile.models import UserProfile, Relationships, AccountInfo
+from demographics.models import Demographics
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 
 from google.oauth2 import id_token
 import google.auth.transport

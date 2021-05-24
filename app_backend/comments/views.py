@@ -63,7 +63,12 @@ def get_all_comments(collection, level):
 
         subCollection = collection.document(commentDoc.id).collection("c")
 
+        subComments                   = get_all_comments(subCollection, level + 1)
+        commentDict["numSubComments"] = len(subComments)
         allComments.append(commentDict)
-        allComments += get_all_comments(subCollection, level + 1)
+        allComments                  += subComments
+
+        # allComments.append(commentDict)
+        # allComments += get_all_comments(subCollection, level + 1)
 
     return allComments
