@@ -34,14 +34,20 @@ def signedInStatus(request, uid=None):
 
 def deviceSignedInOn(request):
 	try:
-		# Checks to see if anyone is signed on on a given device (identified by 'deviceToken'). 
-		# This is used so that a user doesn't have to sign into their account every time they
-		# open the app. 
+		# Checks to see if anyone is signed on the given device (identified by 'deviceToken'). This 
+		# is used so that a user doesn't have to sign into their account every time they open the app. 
+		# If a user is signed in on the given device, then returns the uid of that user. 
 		if request.method == "GET":
 			deviceToken = request.GET["deviceToken"]
-			return JsonResponse({
-				"signedIn": User.objects.filter(deviceToken=deviceToken).exists()
-			})
+			if User.objects.filter(deviceToken=deviceToken).exists():
+				return JsonResponse({
+					"signedIn": True,
+					"uid": User.objects.get(deviceToken=deviceToken).uid
+				})
+			else:
+				return JsonResponse({
+					"signedIn": False
+				})
 
 	except:
 		print(" [ERROR]", sys.exc_info())

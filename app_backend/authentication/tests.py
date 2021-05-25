@@ -28,7 +28,7 @@ class SignedInStatusTests(TestCase):
             profile     = Profile.objects.create(),
         )
 
-    def test_sign(self):
+    def test_sign_in(self):
         deviceToken = "abc"
         response = self.client.post(
             self.url, 
@@ -114,7 +114,10 @@ class SignedInTest(TestCase):
         self.user.deviceToken = "abcedf"
         self.user.save()
 
-        response = self.client.get(self.url + '?deviceToken=abcedf')
+        response     = self.client.get(self.url + '?deviceToken=abcedf')
+        responseBody = json.loads(response.content)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.content)['signedIn'], True)
+        self.assertEqual(responseBody['signedIn'], True)
+        self.assertEqual(responseBody['uid'], self.uid)
+
