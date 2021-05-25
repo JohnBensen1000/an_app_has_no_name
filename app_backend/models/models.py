@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 
-class ContentPreferences(models.Model):
+class Preferences(models.Model):
 	'''
 		Contains a value between 0 and 1 for each relevant type of content. This model is used to
 		keep track of what type of content a user is interested in and what types of content a post
@@ -54,10 +54,10 @@ class Profile(models.Model):
 		and the location of the profile in google cloud storage. 
 	'''
 	exists      = models.BooleanField(default=False)
-	isImage     = models.BooleanField()
-	downloadURL = models.CharField(max_length=50)
+	isImage     = models.BooleanField(default=True)
+	downloadURL = models.CharField(max_length=50, default="")
 
-class UserProfile(models.Model):
+class User(models.Model):
 	'''
 		Keeps track of all relevant information of a user's account. deviceToken stores the the token 
 		of the last device that a user signed in on. firebaseID storeds the id of the user's firebase 
@@ -69,13 +69,19 @@ class UserProfile(models.Model):
 	email  = models.CharField(max_length=50, unique=True) 
 	phone  = models.CharField(max_length=15, unique=True) 
 	deviceToken = models.TextField(default="")
-	firebaseID  = models.TextField(default="")
+	uid         = models.TextField(default="")
 
 	username          = models.CharField(max_length=20, default="")
-	preferredLanguage = models.CharField(max_length=20)
+	preferredLanguage = models.CharField(max_length=20, default="")
 
-	demographics = models.OneToOneField(ContentPreferences, on_delete=models.CASCADE)
-	profile      = models.OneToOneField(Profile, on_delete=models.CASCADE)
+	preferences = models.OneToOneField(
+		Preferences, 
+		on_delete=models.CASCADE, 
+	)
+	profile = models.OneToOneField(
+		Profile, 
+		on_delete=models.CASCADE,
+	)
 
 	allRelationships = models.ManyToManyField(
 		'self', 
@@ -86,6 +92,14 @@ class UserProfile(models.Model):
 	@property
 	def friends(self):
 		pass
+
+	def delete_account(self):
+		if self.preferences:
+			self.preferences.delete()
+		if self.profile:
+			self.profile.delete()
+
+		return super(self.__class__, self).delete()
 
 class Relationships(models.Model):
 	'''
@@ -100,8 +114,8 @@ class Relationships(models.Model):
 		(blocked, 'Blocked'),
 	)
 
-	follower    = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-	creator     = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
+	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
 	relation    = models.IntegerField(choices=RELATION_TYPE, default=following)
 	newFollower = models.BooleanField(default=True)
 
@@ -114,9 +128,9 @@ class ChatMember(models.Model):
 	'''
 	isOwner = models.BooleanField()
 	chatID  = models.CharField(max_length=50)
-	member  = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+	member  = models.ForeignKey(User, on_delete=models.CASCADE)
 
-class PostProfile(models.Model):
+class Post(models.Model):
 	'''
 		Contains data about an individual post. Also contains a many to many field that keeps track of
 		the users that have watched this Post in their recommendations or following feeds. 
@@ -126,15 +140,15 @@ class PostProfile(models.Model):
 	isImage     = models.BooleanField()
 	timeCreated = models.DateTimeField(default=datetime.datetime) 
 
-	demographics = models.OneToOneField(ContentPreferences, on_delete=models.CASCADE)
+	demographics = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 
 	creator = models.ForeignKey(
-		UserProfile, 
+		User, 
 		on_delete=models.CASCADE, 
 		related_name="created"
 	)
 
 	watchedBy = models.ManyToManyField(
-		UserProfile,
+		User,
 		related_name="watched",
 	)
