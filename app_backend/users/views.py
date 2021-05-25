@@ -3,7 +3,6 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
-from django.forms.models import model_to_dict
 
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
@@ -15,7 +14,7 @@ def new_user(request):
 		# see if any unique fields (userID, email, and phone) have been taken by another user. If any of these
 		# fields have been taken, returns a list of the taken fields. If not, then creates a new User entity. 
 		if request.method == "POST":
-			newUser = request.POST
+			newUser = json.loads(request.body)
 
 			fieldsTaken = list()
 			for uniqueField in ["userID", "email", "phone", "uid"]:
@@ -71,9 +70,9 @@ def search(request):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-def user(request, userID=None):
+def user(request, uid=None):
 	try:
-		user = User.objects.get(userID=userID)
+		user = User.objects.get(uid=uid)
 
 		# Recieves the userID for a user, and returns information about that user.
 		if request.method == "GET":
@@ -89,7 +88,7 @@ def user(request, userID=None):
 		# have been already been taken by another user, returns a list of taken fields and doesn't
 		# update the user's account data.
 		if request.method == "POST":
-			newData = request.POST
+			newData = json.loads(request.body)
 
 			fieldsTaken = list()
 
@@ -119,5 +118,25 @@ def user(request, userID=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-def profile(request):
-    pass
+def profile(request, uid=None):
+	# The profile attribute in the AccountInfo field contains information on a user's profile. A user's
+	# profile could be an image, video, or non-existent. This information is used to determine whether
+	# to create a profile for a user, and if the profile should be in image of video format. 
+
+	try:
+		# Gets the profile status of a a user's profile. 
+		if request.method == "GET":
+			user = User.objects.get(uid=uid)
+			return JsonResponse({"profileType": user.accountInfo.profileType})
+
+		# Updated the profile status of a user's profile.
+		elif request.method == "POST":
+			user = User.objects.get(uid=uid)
+			user.accountInfo.profileType = json.loads(request.body)["profileType"]
+			user.accountInfo.save()
+
+			return HttpResponse(status=201)
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)

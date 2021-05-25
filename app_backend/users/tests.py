@@ -22,7 +22,7 @@ class TestNewUser(TestCase):
             'uid': 'laura1313',
             'username': 'Laura Hayes',
         }
-        response = self.client.post(self.url, data=newUserJson)
+        response = self.client.post(self.url, json.dumps(newUserJson), content_type='application/json')
 
         user = User.objects.first()
         
@@ -70,9 +70,9 @@ class TestNewUser(TestCase):
             'uid': 'john1234',
             'username': 'Laura Hayes',
         }
-        response1 = self.client.post(self.url, data=newUserJson1)
-        response2 = self.client.post(self.url, data=newUserJson2)
-        response3 = self.client.post(self.url, data=newUserJson3)
+        response1 = self.client.post(self.url, json.dumps(newUserJson1), content_type='application/json')
+        response2 = self.client.post(self.url, json.dumps(newUserJson2), content_type='application/json')
+        response3 = self.client.post(self.url, json.dumps(newUserJson3), content_type='application/json')
 
         self.assertEqual(response1.status_code, 400)
         self.assertEqual(response2.status_code, 400)
@@ -132,16 +132,17 @@ class TestUser(TestCase):
         self.username = 'Laura Hayes'
         self.email    = 'laura@gmail.com'
         self.phone    = '5164979872'
+        self.uid      = 'laura1313'
 
         self.client = Client()
-        self.url    = '/users/' + self.userID + '/'
+        self.url    = '/v1/users/' + self.uid + '/'
 
         self.user = User.objects.create(
             userID      = self.userID,
             email       = self.email,
             phone       = self.phone,
             deviceToken = '12345',
-            uid         = 'laura1313',
+            uid         = self.uid,
             username    = self.username,
             preferences = Preferences.objects.create(),
             profile     = Profile.objects.create(),
@@ -168,7 +169,7 @@ class TestUser(TestCase):
             'phone':    newPhone,
             'username': newUsername
         }
-        response    = self.client.post(self.url, data=newData)
+        response    = self.client.post(self.url, json.dumps(newData), content_type='application/json')
         updatedUser = User.objects.get(userID=self.userID)
 
         self.assertEqual(response.status_code, 200)
@@ -195,7 +196,7 @@ class TestUser(TestCase):
             'username': 'Laura'
         }
 
-        response    = self.client.post(self.url, data=newData)
+        response    = self.client.post(self.url, json.dumps(newData), content_type='application/json')
         bodyJson    = json.loads(response.content)
         updatedUser = User.objects.get(userID=self.userID)
 

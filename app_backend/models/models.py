@@ -68,11 +68,13 @@ class User(models.Model):
 	userID = models.CharField(max_length=50, unique=True) 
 	email  = models.CharField(max_length=50, unique=True) 
 	phone  = models.CharField(max_length=15, unique=True) 
+	uid    = models.CharField(max_length=15, unique=True) 
+	
 	deviceToken = models.TextField(default="")
-	uid         = models.TextField(default="")
 
 	username          = models.CharField(max_length=20, default="")
 	preferredLanguage = models.CharField(max_length=20, default="")
+	signedIn          = models.BooleanField(default=False)
 
 	preferences = models.OneToOneField(
 		Preferences, 
