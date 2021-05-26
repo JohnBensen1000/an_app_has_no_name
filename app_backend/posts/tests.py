@@ -187,7 +187,8 @@ class WatchedListTests(TestCase):
         response = self.client.post(
             self.url,
             json.dumps({
-                "uid": uid
+                "uid": uid,
+                "userRating": 1,
             }),
             content_type='application/json'
         )

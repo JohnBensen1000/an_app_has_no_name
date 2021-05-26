@@ -2,6 +2,8 @@ import sys
 import json
 from datetime import datetime
 
+import numpy as np
+
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 
@@ -17,14 +19,29 @@ bucket = client.get_bucket("an-app-has-no-name.appspot.com")
 
 def watched_list(request, postID=None):
 	try:
-		# Creates a watchedBy entity to record that a user has watched a post. TODO: save the 
-		# feedback for the post from the user (whether or not the user liked the post).
+		# Creates a watchedBy entity to record that a user has watched a post. Updates both
+		# the user's and post's preferences lists based on the user's feedback. 
 		if request.method == "POST":
 			watchedJson = json.loads(request.body)
 			user = User.objects.get(uid=watchedJson['uid'])
 			post = Post.objects.get(postID=postID)
 
-			# update_demographics(user, post, float(watchedJson["userRating"]))
+			userPref = np.array(user.preferences.list)
+			postPref = np.array(post.preferences.list)
+			
+			stepSize  = .01
+			userPref += stepSize * watchedJson['userRating'] * postPref
+			postPref += stepSize * watchedJson['userRating'] * userPref
+
+			for i, pref in enumerate(userPref):
+				if pref < 0.0: userPref[i] = 0
+				if pref > 1.0: userPref[i] = 1 
+			for i, pref in enumerate(postPref):
+				if pref < 0.0: postPref[i] = 0
+				if pref > 1.0: postPref[i] = 1 
+			
+			user.preferences.list = userPref
+			post.preferences.list = postPref
 
 			post.watchedBy.add(user)
 
@@ -33,7 +50,7 @@ def watched_list(request, postID=None):
 	except:
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
-		
+
 def posts(request, uid=None):
 	try:
 		user = User.objects.get(uid=uid)
