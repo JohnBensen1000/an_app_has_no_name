@@ -28,9 +28,6 @@ def new_user(request):
 				return JsonResponse({"alreadyTaken": fieldsTaken}, status=400)
 
 			else:
-				preferences = Preferences.objects.create()
-				profile     = Profile.objects.create()
-
 				User.objects.create(
 					userID      = newUser["userID"],
 					email       = newUser['email'],
@@ -38,8 +35,8 @@ def new_user(request):
 					deviceToken = newUser["deviceToken"],
 					uid         = newUser["uid"],
 					username    = newUser["username"],
-					preferences = preferences,
-					profile     = profile,
+					preferences = Preferences.objects.create(),
+					profile     = Profile.objects.create(),
 				)
 
 				return HttpResponse(status=201)

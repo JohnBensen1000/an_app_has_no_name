@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import models
+from django.utils import timezone
 
 class Preferences(models.Model):
 	'''
@@ -137,12 +138,13 @@ class Post(models.Model):
 		Contains data about an individual post. Also contains a many to many field that keeps track of
 		the users that have watched this Post in their recommendations or following feeds. 
 	'''
-	postID      = models.AutoField(primary_key=True)
-	private     = models.BooleanField(default=False)
+	postID      = models.CharField(max_length=50, primary_key=True)
+	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
-	timeCreated = models.DateTimeField(default=datetime.datetime) 
+	timeCreated = models.DateTimeField(default=timezone.now()) 
+	downloadURL = models.CharField(max_length=75)
 
-	demographics = models.OneToOneField(Preferences, on_delete=models.CASCADE)
+	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 
 	creator = models.ForeignKey(
 		User, 
@@ -154,3 +156,9 @@ class Post(models.Model):
 		User,
 		related_name="watched",
 	)
+
+	def delete_post(self):
+		if self.preferences:
+			self.preferences.delete()
+
+		return super(self.__class__, self).delete()

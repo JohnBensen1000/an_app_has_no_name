@@ -124,6 +124,7 @@ class TestSearch(TestCase):
             username = user['username'],
             preferences = Preferences.objects.create(),
             profile     = Profile.objects.create(),
+            uid         = user['userID'] + user['username']
         )
 
 class TestUser(TestCase):
