@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.db import models
 from django.utils import timezone
@@ -103,6 +104,13 @@ class User(models.Model):
 			self.profile.delete()
 
 		return super(self.__class__, self).delete()
+
+	def to_dict(self):
+		return {
+			'uid':      self.uid,
+			'userID':   self.userID,
+			'username': self.username
+		}
 
 class Relationships(models.Model):
 	'''
