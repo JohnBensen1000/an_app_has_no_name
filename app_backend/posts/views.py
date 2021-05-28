@@ -75,7 +75,7 @@ def posts(request, uid=None):
 		# right file extension and content type. 
 		if request.method == "POST":
 			newPostJson = json.loads(request.POST['json'])
-			postID      = str(datetime.now().date()) + str(datetime.now().time())
+			postID      = datetime.now().timestamp()
 			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
 
 			if newPostJson['isImage']:

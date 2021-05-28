@@ -146,7 +146,7 @@ class Post(models.Model):
 		Contains data about an individual post. Also contains a many to many field that keeps track of
 		the users that have watched this Post in their recommendations or following feeds. 
 	'''
-	postID      = models.CharField(max_length=50, primary_key=True)
+	postID      = models.FloatField(primary_key=True)
 	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
 	timeCreated = models.DateTimeField(default=timezone.now()) 
@@ -170,3 +170,11 @@ class Post(models.Model):
 			self.preferences.delete()
 
 		return super(self.__class__, self).delete()
+
+	def to_dict(self):
+		return {
+			'creator':     self.creator.to_dict(),
+			'postID':      str(self.postID),
+			'isImage':     self.isImage,
+			'downloadURL': self.downloadURL,
+		}
