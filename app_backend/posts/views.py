@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 from datetime import datetime
 
 import numpy as np
@@ -77,13 +78,14 @@ def posts(request, uid=None):
 			newPostJson = json.loads(request.POST['json'])
 			postID      = datetime.now().timestamp()
 			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
+			directory   = os.environ["STORAGE_DIR"]
 
 			if newPostJson['isImage']:
-				postFile          = "%s/%s.png" % (uid, postID)		
+				postFile          = "%s/%s/%s.png" % (directory, uid, postID)		
 				blob              = bucket.blob(postFile)
 				blob.content_type = "image/png"
 			else:
-				postFile          = "%s/%s.mp4" % (uid, postID)		
+				postFile          = "%s/%s/%s.mp4" % (directory, uid, postID)		
 				blob              = bucket.blob(postFile)
 				blob.content_type = "video/mp4"
 

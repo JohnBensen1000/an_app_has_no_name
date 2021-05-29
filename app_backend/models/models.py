@@ -1,8 +1,13 @@
 import datetime
-import json
+import os 
 
 from django.db import models
 from django.utils import timezone
+
+from google.cloud import firestore
+from google.cloud import storage, firestore
+
+db = firestore.Client()
 
 class Preferences(models.Model):
 	'''
@@ -130,16 +135,39 @@ class Relationships(models.Model):
 	relation    = models.IntegerField(choices=RELATION_TYPE, default=following)
 	newFollower = models.BooleanField(default=True)
 
+class Chat(models.Model):
+	'''
+		Contains information about an individual chat. The value stored in chatID is the location of
+		the chat collection in Firestore. The save method generates a random chatID whenever the Chat
+		entity is being created (self.pk is assigned when the Chat entity is finally created).
+	'''
+	chatID          = models.CharField(max_length=50, unique=True)
+	chatName        = models.CharField(max_length=50, default="")
+	isDirectMessage = models.BooleanField(default=False)
+
+	def save(self, *args, **kwargs):
+		if self.pk is None:
+			self.chatID = str(int(100 * datetime.datetime.now().timestamp()))
+			db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(self.chatID).set({
+				'chatID': self.chatID
+			})
+		
+		super(Chat, self).save(*args, **kwargs)
+
+	def to_dict(self):
+		return {
+			'chatID':   self.chatID,
+			'chatname': self.chatName,
+		}
+
 class ChatMember(models.Model):
 	'''
-		Has two fields: chatID and member. chatID keeps track of where in Firestore a chat is stored. 
-		member is a ForeignKey to a UserProfile. This model is used to keep track of which chats each
-		user is currently in. (Could be group chat or direct message). isOwner is True if member is the
-		owner of the chat, false otherwise (always False for direct messages).
+		Stores the many-to-many relationship between users and chats. The boolean field, isOwner, is set
+		to true if the member is the owner of the chat. 
 	'''
-	isOwner = models.BooleanField()
-	chatID  = models.CharField(max_length=50)
 	member  = models.ForeignKey(User, on_delete=models.CASCADE)
+	chat    = models.ForeignKey(Chat, on_delete=models.CASCADE)
+	isOwner = models.BooleanField(default=False)
 
 class Post(models.Model):
 	'''

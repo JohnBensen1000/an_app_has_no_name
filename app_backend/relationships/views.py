@@ -1,13 +1,37 @@
 import sys
 import json
+import random
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+
+from google.cloud import firestore
+
+db = firestore.Client()
 
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
 Profile       = apps.get_model("models", "Profile")
 Relationships = apps.get_model("models", "Relationships")
+ChatMember    = apps.get_model("models", "ChatMember")
+Chat          = apps.get_model("models", "Chat")
+
+def create_new_direct_message(user1, user2):
+    chat = Chat.objects.create(
+        isDirectMessage=True
+    )
+    
+    ChatMember.objects.create(
+        isOwner = True,
+        chat    = chat,
+        member  = user1
+    )
+    ChatMember.objects.create(
+        isOwner = True,
+        chat    = chat,
+        member  = user2
+    )
+
 
 def followings(request, uid=None):
     try:
@@ -44,6 +68,9 @@ def followings(request, uid=None):
                 newFollower = not isNewFriend, 
             )
 
+            if isNewFriend:
+                create_new_direct_message(user, creator)
+
             return HttpResponse(status=201)	
 
     except:
@@ -76,6 +103,8 @@ def following(request, uid0=None, uid1=None):
                     creator     = follower,
                     newFollower = False, 
                 )
+                create_new_direct_message(follower, creator)
+
                 return HttpResponse(status=201)
             else:
                 return HttpResponse(status=200)

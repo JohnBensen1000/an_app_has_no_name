@@ -1,4 +1,3 @@
-from app_backend.relationships.tests import Relationships
 import sys
 
 import numpy as np

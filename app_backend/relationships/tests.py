@@ -5,10 +5,12 @@ from django.test import TestCase, Client, client
 from django.urls import reverse
 from django.apps import apps
 
-User        = apps.get_model("models", "User")
-Preferences = apps.get_model("models", "Preferences")
-Profile     = apps.get_model("models", "Profile")
+User          = apps.get_model("models", "User")
+Preferences   = apps.get_model("models", "Preferences")
+Profile       = apps.get_model("models", "Profile")
 Relationships = apps.get_model("models", "Relationships")
+ChatMember    = apps.get_model("models", "ChatMember")
+Chat          = apps.get_model("models", "Chat")
 
 class FollowingsTest(TestCase):
     def setUp(self):
@@ -102,11 +104,14 @@ class FollowingsTest(TestCase):
         relation1 = Relationships.objects.get(follower=self.user, creator=self.user1)
         relation2 = Relationships.objects.get(follower=self.user, creator=self.user2)
 
+        self.assertEqual(ChatMember.objects.filter(member=self.user)[0].chat, ChatMember.objects.filter(member=self.user2)[0].chat)
+
         self.assertEqual(response1.status_code, 201)
         self.assertEqual(response2.status_code, 201)
 
         self.assertEqual(relation1.newFollower, True)
         self.assertEqual(relation2.newFollower, False)
+
 
 class FollowingTest(TestCase):
     def setUp(self):
@@ -162,6 +167,7 @@ class FollowingTest(TestCase):
         following          = Relationships.objects.get(follower=self.user1, creator=self.user2)
         newFollowingExists = Relationships.objects.filter(follower=self.user2, creator=self.user1).exists()
 
+        self.assertEqual(ChatMember.objects.filter(member=self.user1)[0].chat, ChatMember.objects.filter(member=self.user2)[0].chat)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(following.newFollower, False)
         self.assertEqual(newFollowingExists, True)
