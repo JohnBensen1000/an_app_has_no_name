@@ -61,13 +61,7 @@ def posts(request, uid=None):
 		if request.method == "GET":
 			userPostsList = []
 			for post in user.created.all():
-				userPostsList.append({
-					"userID":   user.userID, 
-					"uid":      user.uid,
-					"username": user.username, 
-					"postID":   post.postID, 
-					"isImage":  post.isImage,
-				})	
+				userPostsList.append(post.to_dict())	
 					
 			return JsonResponse({"userPosts": userPostsList})
 
@@ -108,6 +102,46 @@ def posts(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+def profile(request, uid=None):
+	try:
+		# Gets the profile status of a user's profile.
+		if request.method == "GET":
+			user = User.objects.get(uid=uid)
+			return JsonResponse(user.profile.to_dict())
+
+		# Allows a user to upload a new image/video as their profile. Saves the uploaded file
+		# in google storage and updates the user's profile entity.
+		elif request.method == "POST":
+			profileJson = json.loads(request.POST['json'])
+			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
+			directory   = os.environ["STORAGE_DIR"]
+
+			if profileJson['isImage']:
+				postFile          = "%s/%s/profile.png" % (directory, uid)		
+				blob              = bucket.blob(postFile)
+				blob.content_type = "image/png"
+			else:
+				postFile          = "%s/%s/profile.mp4" % (directory, uid)		
+				blob              = bucket.blob(postFile)
+				blob.content_type = "video/mp4"
+
+			downloadURL += postFile
+
+			blob.upload_from_file(request.FILES['media'])
+			blob.make_public()
+
+			user = User.objects.get(uid=uid)
+			user.profile.exists  = True
+			user.profile.isImage = profileJson["isImage"]
+			user.downloadURL     = downloadURL
+			user.profile.save()
+
+			return HttpResponse(status=201)
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+
 def post(request, uid=None, postID=None):
 	try:
 		post = Post.objects.get(postID=postID)
@@ -128,3 +162,4 @@ def post(request, uid=None, postID=None):
 	except:
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
+

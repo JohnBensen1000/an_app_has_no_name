@@ -82,8 +82,58 @@ class PostsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(responseBody['userPosts']), 3)
         for postJson in responseBody['userPosts']:
-            self.assertEqual(postJson["userID"], self.userID)
+            self.assertEqual(postJson["creator"]["uid"], self.uid)
 
+class ProfileTest(TestCase):
+    def setUp(self):
+        self.userID   = "John"
+        self.username = "John Bensen"
+        self.uid      = 'UNIT_TEST'
+        self.postID   = "1"
+
+        self.user = User.objects.create(
+            userID   = self.userID,
+            email    = self.userID + "@gmail.com",
+            phone    = self.userID + "12345",
+            username = self.username,
+            uid      = self.uid,
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
+
+        self.client = Client()
+        self.url    = reverse('profile', kwargs={'uid': self.uid})
+
+    def test_get_profile(self):
+        downloadURL = 'testURL'
+
+        self.user.profile.exists      = True
+        self.user.profile.isImage     = True
+        self.user.profile.downloadURL = downloadURL
+        self.user.profile.save()
+
+        response     = self.client.get(self.url)
+        responseBody = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(responseBody['exists'], True)
+        self.assertEqual(responseBody['isImage'], True)
+        self.assertEqual(responseBody['downloadURL'], downloadURL)
+
+    def test_post_profile(self):
+        file = SimpleUploadedFile('test.png', b'this is text, not an image')
+
+        requestJson = json.dumps({
+            'isImage': True,
+        })
+        form = {
+            'media': file,
+            'json':  requestJson,
+
+        }
+        response = self.client.post(self.url, data=form)
+
+        self.assertEqual(response.status_code, 201)
 
 class PostTest(TestCase):
     def setUp(self):
@@ -140,7 +190,7 @@ class PostTest(TestCase):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, 401)
-
+    
 class WatchedListTests(TestCase):
     def setUp(self):
         self.userID   = "John"

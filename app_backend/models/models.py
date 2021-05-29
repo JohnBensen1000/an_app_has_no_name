@@ -64,6 +64,13 @@ class Profile(models.Model):
 	isImage     = models.BooleanField(default=True)
 	downloadURL = models.CharField(max_length=50, default="")
 
+	def to_dict(self):
+		return {
+			'exists':      self.exists,
+			'isImage':     self.isImage,
+			'downloadURL': self.downloadURL,
+		}
+
 class User(models.Model):
 	'''
 		Keeps track of all relevant information of a user's account. deviceToken stores the the token 

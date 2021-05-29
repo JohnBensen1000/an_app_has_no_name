@@ -74,8 +74,8 @@ class FollowingsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(followingsList), 2)
 
-        self.assertEqual(followingsList[0]["userID"], 'jake')
-        self.assertEqual(followingsList[1]["userID"], 'andrew')
+        self.assertEqual(followingsList[0]["user"]["userID"], 'jake')
+        self.assertEqual(followingsList[1]["user"]["userID"], 'andrew')
         self.assertEqual(followingsList[0]["isFriend"], False)
         self.assertEqual(followingsList[1]["isFriend"], True)
 

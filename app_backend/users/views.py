@@ -8,6 +8,28 @@ User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
 
+def search(request):
+	try:
+		# Recieves a string and returns a list of all users whose username contains the string. If 
+		# no usernames contain this string, returns an empty list.
+		if request.method == "GET":
+			searchString = request.GET["contains"]
+
+			if searchString == '':
+				return JsonResponse({"creatorsList": []})
+
+			objectList   = User.objects.filter(username__icontains=searchString)
+			creatorList  = [user.to_dict() for user in objectList]
+
+			if creatorList == []:
+				return JsonResponse({"creatorsList": []})
+			else:
+				return JsonResponse({"creatorsList": creatorList})
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+
 def new_user(request):
 	try:
 		# Recieves a json object containing fields that correspond to a new user's account. First checks to
@@ -32,7 +54,6 @@ def new_user(request):
 					userID      = newUser["userID"],
 					email       = newUser['email'],
 					phone       = newUser['phone'],
-					deviceToken = newUser["deviceToken"],
 					uid         = newUser["uid"],
 					username    = newUser["username"],
 					preferences = Preferences.objects.create(),
@@ -40,28 +61,6 @@ def new_user(request):
 				)
 
 				return HttpResponse(status=201)
-
-	except:
-		print(" [ERROR]", sys.exc_info())
-		return HttpResponse(status=500)
-
-def search(request):
-	try:
-		# Recieves a string and returns a list of all users whose username contains the string. If 
-		# no usernames contain this string, returns an empty list.
-		if request.method == "GET":
-			searchString = request.GET["contains"]
-
-			if searchString == '':
-				return JsonResponse({"creatorsList": []})
-
-			objectList   = User.objects.filter(username__icontains=searchString)
-			creatorList  = [{"username":user.username, "userID":user.userID} for user in objectList]
-
-			if creatorList == []:
-				return JsonResponse({"creatorsList": []})
-			else:
-				return JsonResponse({"creatorsList": creatorList})
 
 	except:
 		print(" [ERROR]", sys.exc_info())
@@ -115,25 +114,3 @@ def user(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-def profile(request, uid=None):
-	# The profile attribute in the AccountInfo field contains information on a user's profile. A user's
-	# profile could be an image, video, or non-existent. This information is used to determine whether
-	# to create a profile for a user, and if the profile should be in image of video format. 
-
-	try:
-		# Gets the profile status of a a user's profile. 
-		if request.method == "GET":
-			user = User.objects.get(uid=uid)
-			return JsonResponse({"profileType": user.accountInfo.profileType})
-
-		# Updated the profile status of a user's profile.
-		elif request.method == "POST":
-			user = User.objects.get(uid=uid)
-			user.accountInfo.profileType = json.loads(request.body)["profileType"]
-			user.accountInfo.save()
-
-			return HttpResponse(status=201)
-
-	except:
-		print(" [ERROR]", sys.exc_info())
-		return HttpResponse(status=500)

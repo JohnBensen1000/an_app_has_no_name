@@ -44,9 +44,7 @@ def followings(request, uid=None):
             for following in user.followings.filter(relation=Relationships.following):
                 creator = following.creator
                 followingsList.append({
-                    "uid":      creator.uid,
-                    "userID":   creator.userID,
-                    "username": creator.username,
+                    "user":     creator.to_dict(),
                     "isFriend": Relationships.objects.filter(follower=creator, creator=user).exists()
                 })
 

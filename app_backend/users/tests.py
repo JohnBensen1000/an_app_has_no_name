@@ -18,7 +18,6 @@ class TestNewUser(TestCase):
             'userID': 'Laura1000',
             'phone': '5164979872',
             'email': 'email@gmail.com',
-            'deviceToken': '12345',
             'uid': 'laura1313',
             'username': 'Laura Hayes',
         }
@@ -30,7 +29,6 @@ class TestNewUser(TestCase):
         self.assertEqual(user.userID, 'Laura1000')
         self.assertEqual(user.phone,  '5164979872')
         self.assertEqual(user.email,  'email@gmail.com')
-        self.assertEqual(user.deviceToken, '12345')
         self.assertEqual(user.uid, 'laura1313')
         self.assertEqual(user.username, 'Laura Hayes')
 
@@ -39,7 +37,6 @@ class TestNewUser(TestCase):
             userID      = 'Laura1000',
             email       = 'email@gmail.com',
             phone       = '5164979872',
-            deviceToken = '12345',
             uid         = 'laura1313',
             username    = 'Laura Hayes',
             preferences = Preferences.objects.create(),
@@ -50,7 +47,6 @@ class TestNewUser(TestCase):
             'userID': 'Laura1000',
             'phone': '5164979872',
             'email': 'email@gmail.com',
-            'deviceToken': '12345',
             'uid': 'laura1313',
             'username': 'Laura Hayes',
         }
@@ -58,7 +54,6 @@ class TestNewUser(TestCase):
             'userID': 'Laura10',
             'phone': '1111112222',
             'email': 'email@gmail.com',
-            'deviceToken': '12345',
             'uid': 'laura1313',
             'username': 'Laura Hayes',
         }
@@ -66,7 +61,6 @@ class TestNewUser(TestCase):
             'userID': 'Laura1000',
             'phone': '1212',
             'email': 'email@gmail.com',
-            'deviceToken': '12345',
             'uid': 'john1234',
             'username': 'Laura Hayes',
         }
@@ -110,11 +104,11 @@ class TestSearch(TestCase):
         responseBody4 = json.loads(self.client.get(self.url + '?contains=').content)
         responseBody5 = json.loads(self.client.get(self.url + '?contains=JacobChen').content)
 
-        self.assertEquals(responseBody1['creatorsList'], [user1])
-        self.assertEquals(responseBody2['creatorsList'], [user2, user3, user4, user5])
-        self.assertEquals(responseBody3['creatorsList'], [user3, user4])
-        self.assertEquals(responseBody4['creatorsList'], [])
-        self.assertEquals(responseBody5['creatorsList'], [])
+        self.assertEquals(len(responseBody1['creatorsList']), 1)
+        self.assertEquals(len(responseBody2['creatorsList']), 4)
+        self.assertEquals(len(responseBody3['creatorsList']), 2)
+        self.assertEquals(len(responseBody4['creatorsList']), 0)
+        self.assertEquals(len(responseBody5['creatorsList']), 0)
 
     def _create_user_object(self, user):
         User.objects.create(
@@ -142,7 +136,6 @@ class TestUser(TestCase):
             userID      = self.userID,
             email       = self.email,
             phone       = self.phone,
-            deviceToken = '12345',
             uid         = self.uid,
             username    = self.username,
             preferences = Preferences.objects.create(),
