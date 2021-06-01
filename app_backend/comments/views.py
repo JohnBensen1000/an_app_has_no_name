@@ -20,12 +20,12 @@ def comments(request, postID=None):
         # comment, the new comment will know where to be placed in the database.    
         if request.method == "POST":
             requestJson   = json.loads(request.body)
-            path          = requestJson["path"] + "/c/" + str(int(datetime.datetime.timestamp()))
+            path          = requestJson["path"] + "/c/" + str(int(datetime.datetime.now().timestamp()))
             commentDocRef = db.document(os.environ["COMMENTS_COLLECTION_NAME"] + "/%d" % postID + path)
 
             commentDocRef.set({
                 u'datePosted': firestore.SERVER_TIMESTAMP,
-                u'uid':        requestJson["uid"],
+                u'user':       requestJson["user"],
                 u'comment':    requestJson["comment"],
                 u'path':       path,
             })
@@ -57,7 +57,10 @@ def get_all_comments(collection, level):
 
         subCollection = collection.document(commentDoc.id).collection("c")
 
+        subComments = get_all_comments(subCollection, level + 1)
+        commentDict['numSubComments'] = len(subComments)
         allComments.append(commentDict)
-        allComments += get_all_comments(subCollection, level + 1)
+        if len(subComments) > 0:
+            allComments.extend(subComments)
 
     return allComments
