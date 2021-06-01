@@ -1,7 +1,7 @@
 import sys
 import json
-import random
 import os
+import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
@@ -10,6 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 from google.cloud import firestore
 
 db = firestore.Client()
+
+serverToken = 'AAAALGfgH5A:APA91bH1FgqgJOZ4LQds7XgnRxatrIxZgP9hzvx8MItG8fsgxDGAgR9XocFWh8qwNfCxBaj-eddA5DwS2r2SNRbNU2iOIJvu-QaXo_2aPf-DujhqdMhz9H3aW5ZItBfXuV0JZ5BGQXDV'
 
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
@@ -70,12 +72,34 @@ def followings(request, uid=None):
 
             if isNewFriend:
                 create_new_direct_message(user, creator)
+            else:
+                send_new_followers(creator)
 
             return HttpResponse(status=201)	
 
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
+
+def send_new_followers(user):
+	# Sends a push notification to a user with a list of all of their new followers. Sends
+	# notification through google firebase to a device (identified by userProfile.deviceToken).
+
+    newFollowers = [relation.follower.to_dict() for relation in Relationships.objects.filter(newFollower=True, creator=user)]
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'key=' + serverToken,
+    }
+    body = {
+        'notification': {
+            'body': {"uid": user.uid, "new_followers": newFollowers}
+        },
+        'to': user.deviceToken,
+        'priority': 'high',
+    }
+    response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
+
 
 @csrf_exempt
 def following(request, uid0=None, uid1=None):

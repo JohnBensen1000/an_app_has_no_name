@@ -5,18 +5,18 @@ import numpy as np
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 
-User        = apps.get_model("models", "User")
-Preferences = apps.get_model("models", "Preferences")
-Profile     = apps.get_model("models", "Profile")
-Post        = apps.get_model("models", "Post")
+User          = apps.get_model("models", "User")
+Preferences   = apps.get_model("models", "Preferences")
+Profile       = apps.get_model("models", "Profile")
+Post          = apps.get_model("models", "Post")
+Relationships = apps.get_model("models", "Relationships")
 
 class PostNode:
-	def __init__(self, creatorID, postID, score):
-		self.creatorID = creatorID
-		self.postID = postID
-		self.score  = score
-		self.next   = None
-		self.prev   = None
+	def __init__(self, post, score):
+		self.post  = post
+		self.score = score
+		self.next  = None
+		self.prev  = None
 
 class LinkedList:
 	def __init__(self, maxSize=128):
@@ -51,10 +51,7 @@ class LinkedList:
 			if searchNode is None:
 				break
 
-			listOfNodes.append({
-                "creatorID": searchNode.creatorID,
-                "postID": searchNode.postID, 
-            })  
+			listOfNodes.append(searchNode.post.to_dict())  
 			searchNode = searchNode.next
 
 		return listOfNodes
@@ -97,57 +94,57 @@ class LinkedList:
 		self.tail.next = None
 		self.size     -= 1
 
-def recommendations(request, userID=None):
+def recommendations(request, uid=None):
     try:
         # Returns a list of recommended posts for the user. Only recommends a post if: the user has not
         # watched the post yet, the user is not the creator, and the user is not following the post's
         # creator. TODO: Document how the algorithm works. 
         if request.method == "GET":
-            user       = User.objects.get(userID=userID)
+            user       = User.objects.get(uid=uid)
             userPref   = np.array(user.preferences.list)
             linkedList = LinkedList()
             
             for post in Post.objects.exclude():
-                userAlreadyWatched     = post.watchedBy.filter(userID=userID).exists()
-                userIsCreator          = post.creator.userID == userID
+                userAlreadyWatched     = post.watchedBy.filter(uid=uid).exists()
+                userIsCreator          = post.creator.uid == uid
                 userIsFollowingCreator = Relationships.objects.filter(follower=user, creator=post.creator)
 
                 if not (userAlreadyWatched or userIsCreator or userIsFollowingCreator):
                     postPref = np.array(post.preferences.list)
                     score    = userPref @ postPref
 
-                    postNode = PostNode(post.creator.userID, post.postID, score)
+                    postNode = PostNode(post, score)
                     linkedList.add_node(postNode)
             
-            return JsonResponse({"Posts": linkedList.get_list_of_nodes()})
+            return JsonResponse({"posts": linkedList.get_list_of_nodes()})
 
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
-def following(request, userID=None):
+def following(request, uid=None):
     try:
         # Returns a list of posts made by all creators that a user is following. Starts looking through
         # all the posts that the user has not watched yet, and if there is room, fills in the rest of the
         # list with posts that the user did already watch. 
         if request.method == "GET":
             listSize   = 16
-            user       = User.objects.get(userID=userID)
-            followings = user.get_followings()
+            user       = User.objects.get(uid=uid)
+            followings = [relationship.creator for relationship in Relationships.objects.filter(follower=user)]
 
             postsList = list()
             for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
                 if user not in post.watchedBy.all():
                     postsList.append(post.to_dict())
                 if len(postsList) == listSize:
-                    return JsonResponse({"postsList": postsList})   
+                    return JsonResponse({"posts": postsList})   
 
-            for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-                postsList.append(post.to_dict())
-                if len(postsList) == listSize:
-                    return JsonResponse({"postsList": postsList})      
+            # for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
+            #     postsList.append(post.to_dict())
+            #     if len(postsList) == listSize:
+            #         return JsonResponse({"posts": postsList})      
 
-            return JsonResponse({"postsList": postsList})        
+            return JsonResponse({"posts": postsList})        
 
     except:
         print(" [ERROR]", sys.exc_info())

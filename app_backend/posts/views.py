@@ -73,7 +73,7 @@ def posts(request, uid=None):
 		# right file extension and content type. 
 		if request.method == "POST":
 			newPostJson = json.loads(request.POST['json'])
-			postID      = datetime.now().timestamp()
+			postID      = str(int(100 * datetime.now().timestamp()))
 			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
 			directory   = os.environ["STORAGE_DIR"]
 

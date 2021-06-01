@@ -183,10 +183,10 @@ class Post(models.Model):
 		Contains data about an individual post. Also contains a many to many field that keeps track of
 		the users that have watched this Post in their recommendations or following feeds. 
 	'''
-	postID      = models.FloatField(primary_key=True)
+	postID      = models.CharField(max_length=25, primary_key=True)
 	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
-	timeCreated = models.DateTimeField(default=timezone.now()) 
+	timeCreated = models.DateTimeField(default=timezone.now) 
 	downloadURL = models.CharField(max_length=75)
 
 	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
