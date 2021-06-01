@@ -186,6 +186,36 @@ class FollowingTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(following.newFollower, False)
 
+    def test_delete_friendship(self):
+        Relationships.objects.create(
+            follower    = self.user2,
+            creator     = self.user1,
+            newFollower = True, 
+        )
+        chat = Chat.objects.create(
+            isDirectMessage=True
+        )
+        ChatMember.objects.create(
+            isOwner = True,
+            chat    = chat,
+            member  = self.user1
+        )
+        ChatMember.objects.create(
+            isOwner = True,
+            chat    = chat,
+            member  = self.user2
+        )
+
+        response = self.client.delete(
+            self.url1,
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Chat.objects.count(), 0)
+        self.assertEqual(ChatMember.objects.count(), 0)
+
+
 class FollowersTest(TestCase):
     def setUp(self):
         self.user1 = User.objects.create(

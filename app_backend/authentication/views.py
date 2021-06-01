@@ -3,9 +3,11 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+from django.views.decorators.csrf import csrf_exempt
 
 User = apps.get_model("models", "User")
 
+@csrf_exempt
 def signedInStatus(request, uid=None):
 	try:
 		# Lets user sign-in/sign-out of their account. If a user signs into their account, the 
@@ -26,12 +28,13 @@ def signedInStatus(request, uid=None):
 
 			user.save()
 
-			return HttpResponse(status=200)
+			return JsonResponse({'isSignedIn': user.signedIn, 'user': user.to_dict()}, status=201)
 
 	except:
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
 def deviceSignedInOn(request):
 	try:
 		# Checks to see if anyone is signed on the given device (identified by 'deviceToken'). This 

@@ -40,7 +40,7 @@ class SignedInStatusTests(TestCase):
         )
 
         updatedUser = User.objects.get(uid=self.uid)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(updatedUser.signedIn, True)
         self.assertEqual(updatedUser.deviceToken, deviceToken)
 
@@ -66,7 +66,7 @@ class SignedInStatusTests(TestCase):
         )
 
         updatedUser = User.objects.get(uid=self.uid)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(updatedUser.signedIn, True)
         self.assertEqual(updatedUser.deviceToken, deviceToken2)
 
@@ -80,7 +80,7 @@ class SignedInStatusTests(TestCase):
         )
 
         updatedUser = User.objects.get(uid=self.uid)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(updatedUser.signedIn, False)
         self.assertEqual(updatedUser.deviceToken, "")
 

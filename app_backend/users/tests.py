@@ -68,13 +68,13 @@ class TestNewUser(TestCase):
         response2 = self.client.post(self.url, json.dumps(newUserJson2), content_type='application/json')
         response3 = self.client.post(self.url, json.dumps(newUserJson3), content_type='application/json')
 
-        self.assertEqual(response1.status_code, 400)
-        self.assertEqual(response2.status_code, 400)
-        self.assertEqual(response3.status_code, 400)
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response3.status_code, 200)
 
-        body1 = json.loads(response1.content)["alreadyTaken"]
-        body2 = json.loads(response2.content)["alreadyTaken"]
-        body3 = json.loads(response3.content)["alreadyTaken"]
+        body1 = json.loads(response1.content)["fieldsTaken"]
+        body2 = json.loads(response2.content)["fieldsTaken"]
+        body3 = json.loads(response3.content)["fieldsTaken"]
 
         self.assertEqual(body1, ["userID", "email", "phone", "uid"])
         self.assertEqual(body2, ["email", "uid"])
@@ -166,7 +166,7 @@ class TestUser(TestCase):
         response    = self.client.post(self.url, json.dumps(newData), content_type='application/json')
         updatedUser = User.objects.get(userID=self.userID)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(updatedUser.email, newEmail)
         self.assertEqual(updatedUser.phone, newPhone)
         self.assertEqual(updatedUser.username, newUsername)
@@ -194,8 +194,8 @@ class TestUser(TestCase):
         bodyJson    = json.loads(response.content)
         updatedUser = User.objects.get(userID=self.userID)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(bodyJson, {"alreadyTaken": ["email", "phone"]})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bodyJson, {"fieldsTaken": ["email", "phone"]})
         self.assertEqual(updatedUser.email, self.email)
         self.assertEqual(updatedUser.phone, self.phone)
         self.assertEqual(updatedUser.username, self.username)

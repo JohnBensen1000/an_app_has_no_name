@@ -163,8 +163,10 @@ class Chat(models.Model):
 
 	def to_dict(self):
 		return {
-			'chatID':   self.chatID,
-			'chatname': self.chatName,
+			'chatID':          self.chatID,
+			'chatname':        self.chatName,
+			'isDirectMessage': self.isDirectMessage,
+			'members':         [chatMember.member.to_dict() for chatMember in ChatMember.objects.filter(chat=self)]
 		}
 
 class ChatMember(models.Model):
@@ -173,7 +175,7 @@ class ChatMember(models.Model):
 		to true if the member is the owner of the chat. 
 	'''
 	member  = models.ForeignKey(User, on_delete=models.CASCADE)
-	chat    = models.ForeignKey(Chat, on_delete=models.CASCADE)
+	chat    = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_members')
 	isOwner = models.BooleanField(default=False)
 
 class Post(models.Model):

@@ -1,9 +1,11 @@
 import sys
 import json
 import random
+import os
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+from django.views.decorators.csrf import csrf_exempt
 
 from google.cloud import firestore
 
@@ -32,7 +34,7 @@ def create_new_direct_message(user1, user2):
         member  = user2
     )
 
-
+@csrf_exempt
 def followings(request, uid=None):
     try:
         user = User.objects.get(uid=uid)
@@ -75,6 +77,7 @@ def followings(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def following(request, uid0=None, uid1=None):
     try:
         follower  = User.objects.get(uid=uid0)
@@ -107,16 +110,40 @@ def following(request, uid0=None, uid1=None):
             else:
                 return HttpResponse(status=200)
 
-        # Deletes a one-way following relationship. 
+        # Deletes a one-way following relationship. If follower is friends with the creator, then
+        # deletes the direct message between the two. This includes deleting the chat data in 
+        # firestore and the chat entity in the database. 
         if request.method == "DELETE":
+            if Relationships.objects.filter(follower=creator, creator=follower).exists():
+                chatDict = dict()
+
+                for chatMember in ChatMember.objects.filter(member=follower):
+                    if chatMember.chat.isDirectMessage:
+                        chatDict[chatMember.chat] = True
+
+                for chatMember in ChatMember.objects.filter(member=creator):
+                    if chatDict[chatMember.chat]:
+                        chat = chatMember.chat
+
+                        docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chat.chatID)
+                        colRef = docRef.collection("chats")
+                        for doc in colRef.stream():
+                            doc.reference.delete()
+
+                        docRef.delete()
+                        chat.delete()
+
+
             following = Relationships.objects.get(follower=follower, creator=creator)
             following.delete()
+
             return HttpResponse(status=200)
 
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def followers(request, uid=None):
     try:
         # Returns a list of all of a user's (identified by uid) followers.
@@ -132,6 +159,7 @@ def followers(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def new_followers(request, uid=None):
     try:
         # Returns a list of all of a user's (identified by uid) new followers.
@@ -146,6 +174,7 @@ def new_followers(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def friends(request, uid=None):
     try:
         # Returns a list of all a user's friends. A 'friend' is defined as another user that

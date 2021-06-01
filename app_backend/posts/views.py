@@ -7,6 +7,7 @@ import numpy as np
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+from django.views.decorators.csrf import csrf_exempt
 
 from google.cloud import storage, firestore
 
@@ -18,6 +19,7 @@ Post        = apps.get_model("models", "Post")
 client = storage.Client(project="an-app-has-no-name")
 bucket = client.get_bucket("an-app-has-no-name.appspot.com")
 
+@csrf_exempt
 def watched_list(request, postID=None):
 	try:
 		# Creates a watchedBy entity to record that a user has watched a post. Updates both
@@ -52,6 +54,7 @@ def watched_list(request, postID=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
 def posts(request, uid=None):
 	try:
 		user = User.objects.get(uid=uid)
@@ -63,7 +66,7 @@ def posts(request, uid=None):
 			for post in user.created.all():
 				userPostsList.append(post.to_dict())	
 					
-			return JsonResponse({"userPosts": userPostsList})
+			return JsonResponse({"posts": userPostsList})
 
 		# Receives meta-data about a post and the post's image of video file. Creates a new post
 		# entity and uploads the post file to google storage in the right location and with the
@@ -102,6 +105,7 @@ def posts(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
 def profile(request, uid=None):
 	try:
 		# Gets the profile status of a user's profile.
@@ -131,9 +135,9 @@ def profile(request, uid=None):
 			blob.make_public()
 
 			user = User.objects.get(uid=uid)
-			user.profile.exists  = True
-			user.profile.isImage = profileJson["isImage"]
-			user.downloadURL     = downloadURL
+			user.profile.exists      = True
+			user.profile.isImage     = profileJson["isImage"]
+			user.profile.downloadURL = downloadURL
 			user.profile.save()
 
 			return HttpResponse(status=201)
@@ -142,6 +146,7 @@ def profile(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
 def post(request, uid=None, postID=None):
 	try:
 		post = Post.objects.get(postID=postID)

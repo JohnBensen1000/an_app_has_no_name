@@ -24,5 +24,5 @@ urlpatterns = [
     path('v1/new_content/',     include("new_content.urls")),
     path('v1/chats/',           include("chats.urls")),
     path('v1/comments/',        include("comments.urls")),
-    path('v1/admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 ]

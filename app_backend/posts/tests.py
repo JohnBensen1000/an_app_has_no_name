@@ -80,8 +80,8 @@ class PostsTests(TestCase):
         responseBody = json.loads(response.content)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(responseBody['userPosts']), 3)
-        for postJson in responseBody['userPosts']:
+        self.assertEqual(len(responseBody['posts']), 3)
+        for postJson in responseBody['posts']:
             self.assertEqual(postJson["creator"]["uid"], self.uid)
 
 class ProfileTest(TestCase):

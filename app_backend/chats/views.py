@@ -6,6 +6,7 @@ import os
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+from django.views.decorators.csrf import csrf_exempt
 
 from google.cloud import firestore
 from google.cloud import storage, firestore
@@ -22,6 +23,7 @@ Chat          = apps.get_model("models", "Chat")
 client = storage.Client(project="an-app-has-no-name")
 bucket = client.get_bucket("an-app-has-no-name.appspot.com")
 
+@csrf_exempt
 def chats(request, uid=None):
     try:
         user = User.objects.get(uid=uid)
@@ -32,7 +34,7 @@ def chats(request, uid=None):
             for chatMember in ChatMember.objects.filter(member=user):
                 chatList.append(chatMember.chat.to_dict())
 
-            return JsonResponse({"chatList": chatList})
+            return JsonResponse({"chats": chatList})
 
         # Allows a user to create a new chat. The user who creates the chat automatically set
         # as a member of the chat. 
@@ -52,6 +54,7 @@ def chats(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def chat(request, uid=None, chatID=None):
     try:
         # Handles posting a new chat. A new chat could be a text or a post (image/video). If the new chat is
@@ -80,7 +83,8 @@ def chat(request, uid=None, chatID=None):
                 blob.make_public()
             
                 docRef.set({
-                    'uid':    uid,
+                    'user':   User.objects.get(uid=uid).to_dict(),
+                    'time':   firestore.SERVER_TIMESTAMP,
                     'isPost': True,
                     'post':   {
                         'downloadURL': blob.public_url,
@@ -90,7 +94,8 @@ def chat(request, uid=None, chatID=None):
 
             else:
                 docRef.set({
-                    'uid':    uid,
+                    'user':   User.objects.get(uid=uid).to_dict(),
+                    'time':   firestore.SERVER_TIMESTAMP,
                     'isPost': False,
                     'text':   newChatJson['text']
                 })
@@ -121,6 +126,7 @@ def chat(request, uid=None, chatID=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
 def members(request, uid=None, chatID=None):
     try:
         chat = Chat.objects.get(chatID=chatID)

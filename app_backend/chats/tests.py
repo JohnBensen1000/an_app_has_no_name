@@ -43,11 +43,42 @@ class ChatsTest(TestCase):
             chatName = "this is my third chat",
         )
 
+        user1 = User.objects.create(
+            userID   = 'test',
+            email    = "1@gmail.com",
+            phone    = "12345",
+            username = "self.username",
+            uid      = "self.uid",
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
+        user2 = User.objects.create(
+            userID   = 'test1',
+            email    = "11@gmail.com",
+            phone    = "123145",
+            username = "self.use1rname",
+            uid      = "self.uid1",
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
+
+
         ChatMember.objects.create(
             member=self.user,
             chat=chat1,
             isOwner=False,
         )
+        ChatMember.objects.create(
+            member=user1,
+            chat=chat1,
+            isOwner=False,
+        )
+        ChatMember.objects.create(
+            member=user2,
+            chat=chat1,
+            isOwner=False,
+        )
+
         ChatMember.objects.create(
             member=self.user,
             chat=chat2,
@@ -61,13 +92,18 @@ class ChatsTest(TestCase):
 
         response     = self.client.get(self.url)
         responseBody = json.loads(response.content)
-        chatList     = responseBody['chatList']
+        chatList     = responseBody['chats']
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(chatList), 3)
         self.assertEqual(chatList[0]['chatID'], chat1.chatID)
         self.assertEqual(chatList[1]['chatID'], chat2.chatID)
         self.assertEqual(chatList[2]['chatID'], chat3.chatID)
+
+        members = chatList[0]['members']
+        self.assertEqual(members[0]['uid'], self.uid)
+        self.assertEqual(members[1]['uid'], user1.uid)
+        self.assertEqual(members[2]['uid'], user2.uid)
 
     def test_create_new_chat(self):
         chatName = 'newChatName'
