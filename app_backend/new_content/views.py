@@ -133,16 +133,16 @@ def following(request, uid=None):
             followings = [relationship.creator for relationship in Relationships.objects.filter(follower=user)]
 
             postsList = list()
-            for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-                if user not in post.watchedBy.all():
-                    postsList.append(post.to_dict())
-                if len(postsList) == listSize:
-                    return JsonResponse({"posts": postsList})   
-
             # for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-            #     postsList.append(post.to_dict())
+            #     if user not in post.watchedBy.all():
+            #         postsList.append(post.to_dict())
             #     if len(postsList) == listSize:
-            #         return JsonResponse({"posts": postsList})      
+            #         return JsonResponse({"posts": postsList})   
+
+            for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
+                postsList.append(post.to_dict())
+                if len(postsList) == listSize:
+                    return JsonResponse({"posts": postsList})      
 
             return JsonResponse({"posts": postsList})        
 

@@ -11,12 +11,19 @@ User = apps.get_model("models", "User")
 def signedInStatus(request, uid=None):
 	try:
 		# Lets user sign-in/sign-out of their account. If a user signs into their account, the 
-		# field "deviceToken" is updated to whatever device the user signed in from. If a user 
-		# is signing out of their account, "deviceToken" is set to "" to indicate that the user 
-		# is not signed in on any device. 
+		# field "deviceToken" is updated to whatever device the user signed in from. Signs out 
+		# all other users that are signed in on this device If a user is signing out of their 
+		# account, "deviceToken" is set to "" to indicate that the user is not signed in on 
+		# any device.
 		if request.method == "POST":
-			user        = User.objects.get(uid=uid)
 			requestBody = json.loads(request.body)
+
+			for user in User.objects.filter(deviceToken=requestBody["deviceToken"]):
+				user.signedIn    = False
+				user.deviceToken = ""
+				user.save()
+
+			user = User.objects.get(uid=uid)
 
 			if requestBody['signIn'] == True:
 				user.deviceToken = requestBody["deviceToken"] 
