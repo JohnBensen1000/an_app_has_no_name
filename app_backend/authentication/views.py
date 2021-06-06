@@ -18,14 +18,14 @@ def signedInStatus(request, uid=None):
 		if request.method == "POST":
 			requestBody = json.loads(request.body)
 
-			for user in User.objects.filter(deviceToken=requestBody["deviceToken"]):
-				user.signedIn    = False
-				user.deviceToken = ""
-				user.save()
-
 			user = User.objects.get(uid=uid)
 
 			if requestBody['signIn'] == True:
+				for tempUser in User.objects.filter(deviceToken=requestBody["deviceToken"]):
+					tempUser.signedIn    = False
+					tempUser.deviceToken = ""
+					tempUser.save()
+					
 				user.deviceToken = requestBody["deviceToken"] 
 				user.signedIn    = True
 
@@ -52,7 +52,7 @@ def deviceSignedInOn(request):
 			if User.objects.filter(deviceToken=deviceToken).exists():
 				return JsonResponse({
 					"signedIn": True,
-					"uid": User.objects.get(deviceToken=deviceToken).uid
+					"user": User.objects.get(deviceToken=deviceToken).to_dict()
 				})
 			else:
 				return JsonResponse({

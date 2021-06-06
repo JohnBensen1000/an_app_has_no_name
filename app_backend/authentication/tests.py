@@ -119,5 +119,5 @@ class SignedInTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(responseBody['signedIn'], True)
-        self.assertEqual(responseBody['uid'], self.uid)
+        self.assertEqual(responseBody['user']['uid'], self.uid)
 

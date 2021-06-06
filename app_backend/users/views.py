@@ -77,40 +77,25 @@ def user(request, uid=None):
 		# Recieves the userID for a user, and returns information about that user.
 		if request.method == "GET":
 			userDict = {
-				'userID':   user.userID,
-				'username': user.username,
-				'email':    user.email,
-				'phone':    user.phone,
+				'userID':       user.userID,
+				'username':     user.username,
+				'email':        user.email,
+				'phone':        user.phone,
+				'profileColor': user.profileColor,
 			}
 			return JsonResponse(userDict)
 
-		# Updates a user's account data with the recieved data. If the recieved phone or email
-		# have been already been taken by another user, returns a list of taken fields and doesn't
-		# update the user's account data.
+
 		if request.method == "POST":
 			newData = json.loads(request.body)
 
-			fieldsTaken = list()
-
-			if User.objects.filter(email=newData['email']).exists():
-				fieldsTaken.append('email')
-			if User.objects.filter(phone=newData['phone']).exists():
-				fieldsTaken.append('phone')
-
-			if len(fieldsTaken) > 0:
-				return JsonResponse({"fieldsTaken": fieldsTaken}, status=200)
-			
-			else:
-				user.email    = newData['email']
-				user.phone    = newData['phone']
+			if 'profileColor' in newData:
+				user.profileColor = newData['profileColor'] 
+			if 'username' in newData:
 				user.username = newData['username']
-				user.save()
+			user.save()
 
-				return HttpResponse({
-					'email': user.email,
-					'phone': user.phone,
-					'username': user.username
-				}, status=201) 
+			return HttpResponse(status=201)
 
 		# When deleting a user account, the Preference and Profile models that are associated with
 		# it have to also be deleted. the method, delete_account(), takes care of that. 

@@ -123,23 +123,25 @@ class TestSearch(TestCase):
 
 class TestUser(TestCase):
     def setUp(self):
-        self.userID   = 'Laura1000'
-        self.username = 'Laura Hayes'
-        self.email    = 'laura@gmail.com'
-        self.phone    = '5164979872'
-        self.uid      = 'laura1313'
+        self.userID       = 'Laura1000'
+        self.username     = 'Laura Hayes'
+        self.email        = 'laura@gmail.com'
+        self.phone        = '5164979872'
+        self.uid          = 'laura1313'
+        self.profileColor = 'green'
 
         self.client = Client()
         self.url    = '/v1/users/' + self.uid + '/'
 
         self.user = User.objects.create(
-            userID      = self.userID,
-            email       = self.email,
-            phone       = self.phone,
-            uid         = self.uid,
-            username    = self.username,
-            preferences = Preferences.objects.create(),
-            profile     = Profile.objects.create(),
+            userID       = self.userID,
+            email        = self.email,
+            phone        = self.phone,
+            uid          = self.uid,
+            username     = self.username,
+            profileColor = self.profileColor,
+            preferences  = Preferences.objects.create(),
+            profile      = Profile.objects.create(),
         )
 
     def test_get_user(self):   
@@ -148,57 +150,45 @@ class TestUser(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(bodyJson['userID'],   self.userID)
-        self.assertEqual(bodyJson['username'], self.username)
-        self.assertEqual(bodyJson['email'],    self.email)
-        self.assertEqual(bodyJson['phone'],    self.phone)
+        self.assertEqual(bodyJson['userID'],       self.userID)
+        self.assertEqual(bodyJson['username'],     self.username)
+        self.assertEqual(bodyJson['email'],        self.email)
+        self.assertEqual(bodyJson['phone'],        self.phone)
+        self.assertEqual(bodyJson['profileColor'], self.profileColor)
 
-    def test_update_user_fields(self):
-        newEmail    = 'newLaura@gmail.com'
-        newPhone    = '123456789'
-        newUsername = 'Laura'
+    def test_update_user_profile_color(self):
+        newColor = 'red'
 
-        newData = {
-            'email':    newEmail,
-            'phone':    newPhone,
-            'username': newUsername
-        }
-        response    = self.client.post(self.url, json.dumps(newData), content_type='application/json')
-        updatedUser = User.objects.get(userID=self.userID)
-
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(updatedUser.email, newEmail)
-        self.assertEqual(updatedUser.phone, newPhone)
-        self.assertEqual(updatedUser.username, newUsername)
-
-    def test_update_user_fields_when_fields_are_taken(self):
-        email = 'john@gmail.com'
-        phone = '12345'
-
-        User.objects.create(
-            userID   = 'john',
-            email    = email,
-            phone    = phone,
-            username = 'john bensen',
-            preferences = Preferences.objects.create(),
-            profile     = Profile.objects.create(),
+        response = self.client.post(
+            self.url, 
+            json.dumps({
+                'profileColor': newColor
+            }), 
+            content_type='application/json'
         )
 
-        newData = {
-            'email':    email,
-            'phone':    phone,
-            'username': 'Laura'
-        }
+        updatedUser = User.objects.get(uid=self.uid)
 
-        response    = self.client.post(self.url, json.dumps(newData), content_type='application/json')
-        bodyJson    = json.loads(response.content)
-        updatedUser = User.objects.get(userID=self.userID)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(bodyJson, {"fieldsTaken": ["email", "phone"]})
-        self.assertEqual(updatedUser.email, self.email)
-        self.assertEqual(updatedUser.phone, self.phone)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(updatedUser.profileColor, newColor)
         self.assertEqual(updatedUser.username, self.username)
+
+    def test_update_user_username(self):
+        username = 'username'
+
+        response = self.client.post(
+            self.url, 
+            json.dumps({
+                'username': username
+            }), 
+            content_type='application/json'
+        )
+
+        updatedUser = User.objects.get(uid=self.uid)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(updatedUser.profileColor, self.profileColor)
+        self.assertEqual(updatedUser.username, username)
 
     def test_delete_user(self):
         response = self.client.delete(self.url)

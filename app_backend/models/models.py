@@ -1,5 +1,6 @@
 import datetime
 import os 
+import random
 
 from django.db import models
 from django.utils import timezone
@@ -8,6 +9,8 @@ from google.cloud import firestore
 from google.cloud import storage, firestore
 
 db = firestore.Client()
+
+NUM_COLORS = 7
 
 class Preferences(models.Model):
 	'''
@@ -88,6 +91,7 @@ class User(models.Model):
 
 	username          = models.CharField(max_length=20, default="")
 	preferredLanguage = models.CharField(max_length=20, default="")
+	profileColor      = models.CharField(max_length=10, default='blue')
 	signedIn          = models.BooleanField(default=False)
 
 	preferences = models.OneToOneField(
@@ -119,9 +123,10 @@ class User(models.Model):
 
 	def to_dict(self):
 		return {
-			'uid':      self.uid,
-			'userID':   self.userID,
-			'username': self.username
+			'uid':          self.uid,
+			'userID':       self.userID,
+			'username':     self.username,
+			'profileColor': self.profileColor
 		}
 
 class Relationships(models.Model):
