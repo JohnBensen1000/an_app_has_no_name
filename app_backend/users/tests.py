@@ -150,11 +150,10 @@ class TestUser(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(bodyJson['userID'],       self.userID)
-        self.assertEqual(bodyJson['username'],     self.username)
-        self.assertEqual(bodyJson['email'],        self.email)
-        self.assertEqual(bodyJson['phone'],        self.phone)
-        self.assertEqual(bodyJson['profileColor'], self.profileColor)
+        self.assertEqual(bodyJson['user']['uid'],          self.uid)
+        self.assertEqual(bodyJson['user']['userID'],       self.userID)
+        self.assertEqual(bodyJson['user']['username'],     self.username)
+        self.assertEqual(bodyJson['user']['profileColor'], self.profileColor)
 
     def test_update_user_profile_color(self):
         newColor = 'red'

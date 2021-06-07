@@ -74,16 +74,9 @@ def user(request, uid=None):
 	try:
 		user = User.objects.get(uid=uid)
 
-		# Recieves the userID for a user, and returns information about that user.
+		# Recieves the uid for a user, and returns information about that user.
 		if request.method == "GET":
-			userDict = {
-				'userID':       user.userID,
-				'username':     user.username,
-				'email':        user.email,
-				'phone':        user.phone,
-				'profileColor': user.profileColor,
-			}
-			return JsonResponse(userDict)
+			return JsonResponse({'user': user.to_dict()})
 
 
 		if request.method == "POST":

@@ -25,7 +25,7 @@ def comments(request, postID=None):
 
             commentDocRef.set({
                 u'datePosted': firestore.SERVER_TIMESTAMP,
-                u'user':       requestJson["user"],
+                u'uid':        requestJson["uid"],
                 u'comment':    requestJson["comment"],
                 u'path':       path,
             })

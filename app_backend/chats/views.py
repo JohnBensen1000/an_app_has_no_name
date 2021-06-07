@@ -69,7 +69,7 @@ def chat(request, uid=None, chatID=None):
             docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chatID).collection("chats").document()
 
             if newChatJson['isPost']:
-                fileName  = datetime.datetime.now().strftime("%m%d%Y%H:%M:%S")
+                fileName  = str(int(100 * datetime.datetime.now().timestamp()))
                 directory = os.environ["STORAGE_DIR"]
 
                 if newChatJson['isImage']:
@@ -83,7 +83,7 @@ def chat(request, uid=None, chatID=None):
                 blob.make_public()
             
                 docRef.set({
-                    'user':   User.objects.get(uid=uid).to_dict(),
+                    'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
                     'isPost': True,
                     'post':   {
@@ -94,7 +94,7 @@ def chat(request, uid=None, chatID=None):
 
             else:
                 docRef.set({
-                    'user':   User.objects.get(uid=uid).to_dict(),
+                    'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
                     'isPost': False,
                     'text':   newChatJson['text']
