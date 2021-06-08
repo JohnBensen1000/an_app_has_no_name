@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 from django.views.decorators.csrf import csrf_exempt
 
-from google.cloud import storage, firestore
+from google.cloud import storage
 
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
@@ -133,6 +133,8 @@ def profile(request, uid=None):
 
 			blob.upload_from_file(request.FILES['media'])
 			blob.make_public()
+			blob.cache_control = 'max-age=0'
+			blob.patch()
 
 			user = User.objects.get(uid=uid)
 			user.profile.exists      = True

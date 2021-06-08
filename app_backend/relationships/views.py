@@ -146,7 +146,7 @@ def following(request, uid0=None, uid1=None):
                         chatDict[chatMember.chat] = True
 
                 for chatMember in ChatMember.objects.filter(member=creator):
-                    if chatDict[chatMember.chat]:
+                    if chatMember.chat in chatDict:
                         chat = chatMember.chat
 
                         docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chat.chatID)
