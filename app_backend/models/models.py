@@ -10,8 +10,6 @@ from google.cloud import storage, firestore
 
 db = firestore.Client()
 
-NUM_COLORS = 7
-
 class Preferences(models.Model):
 	'''
 		Contains a value between 0 and 1 for each relevant type of content. This model is used to
@@ -19,27 +17,23 @@ class Preferences(models.Model):
 		could be labeled as. The property "list" is used to treat the ContentPreferences attributes
 		as a list. 
 	'''
-	male   = models.FloatField(default=.1)
-	female = models.FloatField(default=.1)
-	other  = models.FloatField(default=.1)
 
-	y0_12  = models.FloatField(default=.1)
-	y13_18 = models.FloatField(default=.1)
-	y19_24 = models.FloatField(default=.1)
-	y25_29 = models.FloatField(default=.1)
-	y30_34 = models.FloatField(default=.1)
-	y35_39 = models.FloatField(default=.1)
-	y40_49 = models.FloatField(default=.1)
-	y50_59 = models.FloatField(default=.1)
-	y60_up = models.FloatField(default=.1)
-
+	food      = models.FloatField(default=.1)
+	nature    = models.FloatField(default=.1)
+	travel    = models.FloatField(default=.1)
+	music     = models.FloatField(default=.1)
+	fitness   = models.FloatField(default=.1)
+	art       = models.FloatField(default=.1)
 	sports    = models.FloatField(default=.1)
 	dance     = models.FloatField(default=.1)
 	comedy    = models.FloatField(default=.1)
 	skits     = models.FloatField(default=.1)
 	lifestyle = models.FloatField(default=.1)
-	art       = models.FloatField(default=.1)
 	selfHelp  = models.FloatField(default=.1)
+
+	@property
+	def fields(self):
+		return list(self.__dict__.keys())[2: ]
 
 	@property
 	def list(self):

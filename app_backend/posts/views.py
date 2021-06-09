@@ -63,7 +63,7 @@ def posts(request, uid=None):
 		# with the creator. 
 		if request.method == "GET":
 			userPostsList = []
-			for post in user.created.all():
+			for post in user.created.all().order_by('-timeCreated'):
 				userPostsList.append(post.to_dict())	
 					
 			return JsonResponse({"posts": userPostsList})
