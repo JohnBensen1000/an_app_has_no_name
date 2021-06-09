@@ -116,20 +116,15 @@ def user_preferences(request, uid=None):
 	try:
 		user = User.objects.get(uid=uid)
 
-		# Allows a user to update their preferences list. Recieves a list of bools that is the 
-		# same size as preferences.list. For each item in this list of booleans, if the item
-		# is True and the corresponding item (item with same index) in preferences.list has a 
-		# value of less than .9, set that item to have a value of .9.
-
+		# Recieves a list of preference field names. If that field has a value less than .9, sets
+		# it's value to .9.
 		if request.method == "POST":
 			newPreferences  = json.loads(request.body)
-			preferencesList = user.preferences.list
 
-			for index, setPreference in enumerate(newPreferences['preferences']):
-				if setPreference and preferencesList[index] < .9:
-					preferencesList[index] = .9
+			for preference in newPreferences['preferences']:
+				if user.preferences.__dict__[preference] < .9:
+					user.preferences.__dict__[preference] = .9
 
-			user.preferences.list = preferencesList
 			user.preferences.save()
 
 			return HttpResponse(status=201)

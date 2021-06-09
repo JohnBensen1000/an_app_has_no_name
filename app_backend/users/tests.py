@@ -233,9 +233,7 @@ class TestUserPreferences(TestCase):
         )
 
     def test_post_user_preferences(self):
-        self.user.preferences.list = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, 1.0]
-
-        newPreferences = [True, True, False, False, True, True, False, False, False, False, True, True]
+        newPreferences = ['art', 'fitness', 'sports', 'gaming']
         response = self.client.post(
             self.url, 
             json.dumps({'preferences': newPreferences}), 
@@ -243,8 +241,11 @@ class TestUserPreferences(TestCase):
         )
 
         updatedUser     = User.objects.get(uid=self.uid)
-        preferencesList = updatedUser.preferences.list
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(preferencesList, [.9, .9, .2, .3, .9, .9, .6, .7, .8, .9, .95, 1.0])
-
+        self.assertEqual(updatedUser.preferences.art, .9)
+        self.assertEqual(updatedUser.preferences.fitness, .9)
+        self.assertEqual(updatedUser.preferences.sports, .9)
+        self.assertEqual(updatedUser.preferences.gaming, .9)
+        self.assertEqual(updatedUser.preferences.skits, .1)
+        self.assertEqual(updatedUser.preferences.outdoors, .1)

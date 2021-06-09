@@ -30,6 +30,8 @@ class Preferences(models.Model):
 	skits     = models.FloatField(default=.1)
 	lifestyle = models.FloatField(default=.1)
 	selfHelp  = models.FloatField(default=.1)
+	outdoors  = models.FloatField(default=.1)
+	gaming    = models.FloatField(default=.1)
 
 	@property
 	def fields(self):
