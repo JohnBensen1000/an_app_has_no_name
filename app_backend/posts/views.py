@@ -72,32 +72,18 @@ def posts(request, uid=None):
 		# entity and uploads the post file to google storage in the right location and with the
 		# right file extension and content type. 
 		if request.method == "POST":
-			newPostJson = json.loads(request.POST['json'])
 			postID      = str(int(100 * datetime.now().timestamp()))
-			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
-			directory   = os.environ["STORAGE_DIR"]
+			newPostJson = json.loads(request.body)
 
-			if newPostJson['isImage']:
-				postFile          = "%s/%s/%s.png" % (directory, uid, postID)		
-				blob              = bucket.blob(postFile)
-				blob.content_type = "image/png"
-			else:
-				postFile          = "%s/%s/%s.mp4" % (directory, uid, postID)		
-				blob              = bucket.blob(postFile)
-				blob.content_type = "video/mp4"
-
-			downloadURL += postFile
-			blob.upload_from_file(request.FILES['media'])
-			blob.make_public()
-
-			Post.objects.create(
+			newPost = Post.objects.create(
 				postID      = postID,
 				preferences = Preferences.objects.create(),
 				creator     = user,
 				isImage	    = newPostJson["isImage"],
 				isPrivate   = newPostJson["isPrivate"],
-				downloadURL = downloadURL
+				downloadURL = newPostJson["downloadURL"]
 			)
+			print(newPost.to_dict())
 
 			return HttpResponse(status=201)
 
@@ -116,30 +102,12 @@ def profile(request, uid=None):
 		# Allows a user to upload a new image/video as their profile. Saves the uploaded file
 		# in google storage and updates the user's profile entity.
 		elif request.method == "POST":
-			profileJson = json.loads(request.POST['json'])
-			downloadURL = 'https://storage.googleapis.com/an-app-has-no-name.appspot.com/'
-			directory   = os.environ["STORAGE_DIR"]
-
-			if profileJson['isImage']:
-				postFile          = "%s/%s/profile.png" % (directory, uid)		
-				blob              = bucket.blob(postFile)
-				blob.content_type = "image/png"
-			else:
-				postFile          = "%s/%s/profile.mp4" % (directory, uid)		
-				blob              = bucket.blob(postFile)
-				blob.content_type = "video/mp4"
-
-			downloadURL += postFile
-
-			blob.upload_from_file(request.FILES['media'])
-			blob.make_public()
-			blob.cache_control = 'max-age=0'
-			blob.patch()
+			profileJson = json.loads(request.body)
 
 			user = User.objects.get(uid=uid)
 			user.profile.exists      = True
 			user.profile.isImage     = profileJson["isImage"]
-			user.profile.downloadURL = downloadURL
+			user.profile.downloadURL = profileJson['downloadURL']
 			user.profile.save()
 
 			return HttpResponse(status=201)

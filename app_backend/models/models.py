@@ -32,6 +32,7 @@ class Preferences(models.Model):
 	selfHelp  = models.FloatField(default=.1)
 	outdoors  = models.FloatField(default=.1)
 	gaming    = models.FloatField(default=.1)
+	coding    = models.FloatField(default=.1)
 
 	@property
 	def fields(self):

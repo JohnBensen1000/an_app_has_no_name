@@ -63,31 +63,17 @@ def chat(request, uid=None, chatID=None):
         # the new chat is a text, then stores the chat and sender in a new document in google firestore (in the
         # correct collection).
         if request.method == "POST":
-            if 'json' in request.POST: newChatJson = json.loads(request.POST['json'])  
-            else:                      newChatJson = json.loads(request.body)
+            newChatJson = json.loads(request.body)
 
             docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chatID).collection("chats").document()
 
             if newChatJson['isPost']:
-                fileName  = str(int(100 * datetime.datetime.now().timestamp()))
-                directory = os.environ["STORAGE_DIR"]
-
-                if newChatJson['isImage']:
-                    blob = bucket.blob("%s/%s/%s.png" % (directory, chatID, fileName))
-                    blob.content_type = "image/png"
-                else:
-                    blob = bucket.blob("%s/%s/%s.mp4" % (directory, chatID, fileName))
-                    blob.content_type = "video/mp4"
-
-                blob.upload_from_file(request.FILES['media'])
-                blob.make_public()
-            
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
                     'isPost': True,
                     'post':   {
-                        'downloadURL': blob.public_url,
+                        'downloadURL': newChatJson['downloadURL'],
                         'isImage':     newChatJson['isImage']
                     }
                 })
