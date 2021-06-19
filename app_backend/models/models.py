@@ -24,15 +24,8 @@ class Preferences(models.Model):
 	music     = models.FloatField(default=.1)
 	fitness   = models.FloatField(default=.1)
 	art       = models.FloatField(default=.1)
-	sports    = models.FloatField(default=.1)
 	dance     = models.FloatField(default=.1)
 	comedy    = models.FloatField(default=.1)
-	skits     = models.FloatField(default=.1)
-	lifestyle = models.FloatField(default=.1)
-	selfHelp  = models.FloatField(default=.1)
-	outdoors  = models.FloatField(default=.1)
-	gaming    = models.FloatField(default=.1)
-	coding    = models.FloatField(default=.1)
 
 	@property
 	def fields(self):
@@ -62,7 +55,7 @@ class Profile(models.Model):
 	'''
 	exists      = models.BooleanField(default=False)
 	isImage     = models.BooleanField(default=True)
-	downloadURL = models.CharField(max_length=50, default="")
+	downloadURL = models.TextField(default="")
 
 	def to_dict(self):
 		return {
@@ -82,7 +75,7 @@ class User(models.Model):
 	userID = models.CharField(max_length=50, unique=True) 
 	email  = models.CharField(max_length=50, unique=True) 
 	phone  = models.CharField(max_length=15, unique=True) 
-	uid    = models.CharField(max_length=15, unique=True) 
+	uid    = models.CharField(max_length=50, unique=True) 
 	
 	deviceToken = models.TextField(default="")
 
@@ -157,7 +150,7 @@ class Chat(models.Model):
 	def save(self, *args, **kwargs):
 		if self.pk is None:
 			self.chatID = str(int(100 * datetime.datetime.now().timestamp()))
-			db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(self.chatID).set({
+			db.collection('CHATS').document(self.chatID).set({
 				'chatID': self.chatID
 			})
 		
@@ -185,11 +178,11 @@ class Post(models.Model):
 		Contains data about an individual post. Also contains a many to many field that keeps track of
 		the users that have watched this Post in their recommendations or following feeds. 
 	'''
-	postID      = models.CharField(max_length=25, primary_key=True)
+	postID      = models.CharField(max_length=100, primary_key=True)
 	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
-	timeCreated = models.DateTimeField(default=timezone.now) 
-	downloadURL = models.CharField(max_length=75)
+	timeCreated = models.DateField(default=timezone.now) 
+	downloadURL = models.TextField()
 
 	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 

@@ -20,8 +20,8 @@ Relationships = apps.get_model("models", "Relationships")
 ChatMember    = apps.get_model("models", "ChatMember")
 Chat          = apps.get_model("models", "Chat")
 
-client = storage.Client(project="an-app-has-no-name")
-bucket = client.get_bucket("an-app-has-no-name.appspot.com")
+client = storage.Client(project="entropy")
+bucket = client.get_bucket("entropy-317014.appspot.com")
 
 @csrf_exempt
 def chats(request, uid=None):
@@ -65,7 +65,7 @@ def chat(request, uid=None, chatID=None):
         if request.method == "POST":
             newChatJson = json.loads(request.body)
 
-            docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chatID).collection("chats").document()
+            docRef = db.collection('CHATS').document(chatID).collection("chats").document()
 
             if newChatJson['isPost']:
                 docRef.set({
@@ -95,7 +95,7 @@ def chat(request, uid=None, chatID=None):
             user = User.objects.get(uid=uid)
 
             if chat.isDirectMessage:
-                docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chatID)
+                docRef = db.collection('CHATS').document(chatID)
                 colRef = docRef.collection("chats")
                 for doc in colRef.stream():
                     doc.reference.delete()

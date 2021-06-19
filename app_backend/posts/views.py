@@ -16,8 +16,8 @@ Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
 Post        = apps.get_model("models", "Post")
 
-client = storage.Client(project="an-app-has-no-name")
-bucket = client.get_bucket("an-app-has-no-name.appspot.com")
+client = storage.Client(project="entropy")
+bucket = client.get_bucket("entropy-317014.appspot.com")
 
 @csrf_exempt
 def watched_list(request, postID=None):
@@ -83,7 +83,6 @@ def posts(request, uid=None):
 				isPrivate   = newPostJson["isPrivate"],
 				downloadURL = newPostJson["downloadURL"]
 			)
-			print(newPost.to_dict())
 
 			return HttpResponse(status=201)
 

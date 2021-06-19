@@ -21,7 +21,7 @@ def comments(request, postID=None):
         if request.method == "POST":
             requestJson   = json.loads(request.body)
             path          = requestJson["path"] + "/c/" + str(int(datetime.datetime.now().timestamp()))
-            commentDocRef = db.document(os.environ["COMMENTS_COLLECTION_NAME"] + "/%d" % postID + path)
+            commentDocRef = db.document('COMMENTS' + "/%d" % postID + path)
 
             commentDocRef.set({
                 u'datePosted': firestore.SERVER_TIMESTAMP,
@@ -33,7 +33,7 @@ def comments(request, postID=None):
 
         # Gets a list of the comments of a post. 
         if request.method == "GET":
-            postDoc      = db.collection(os.environ["COMMENTS_COLLECTION_NAME"]).document(str(postID))
+            postDoc      = db.collection('COMMENTS').document(str(postID))
             collection   = postDoc.collection("c")
             commentsList = get_all_comments(collection, 0)
 

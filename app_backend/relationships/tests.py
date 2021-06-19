@@ -5,6 +5,7 @@ from django.test import TestCase, Client, client
 from django.urls import reverse
 from django.apps import apps
 
+dfjgf
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
 Profile       = apps.get_model("models", "Profile")

@@ -73,7 +73,8 @@ def followings(request, uid=None):
             if isNewFriend:
                 create_new_direct_message(user, creator)
             else:
-                send_new_followers(creator)
+                pass
+                # send_new_followers(creator)
 
             return HttpResponse(status=201)	
 
@@ -81,24 +82,24 @@ def followings(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
-def send_new_followers(user):
-	# Sends a push notification to a user with a list of all of their new followers. Sends
-	# notification through google firebase to a device (identified by userProfile.deviceToken).
+# def send_new_followers(user):
+# 	# Sends a push notification to a user with a list of all of their new followers. Sends
+# 	# notification through google firebase to a device (identified by userProfile.deviceToken).
 
-    newFollowers = [relation.follower.to_dict() for relation in Relationships.objects.filter(newFollower=True, creator=user)]
+#     newFollowers = [relation.follower.to_dict() for relation in Relationships.objects.filter(newFollower=True, creator=user)]
 
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'key=' + serverToken,
-    }
-    body = {
-        'notification': {
-            'body': {"uid": user.uid, "new_followers": newFollowers}
-        },
-        'to': user.deviceToken,
-        'priority': 'high',
-    }
-    response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
+#     headers = {
+#         'Content-Type': 'application/json',
+#         'Authorization': 'key=' + serverToken,
+#     }
+#     body = {
+#         'notification': {
+#             'body': {"uid": user.uid, "new_followers": newFollowers}
+#         },
+#         'to': user.deviceToken,
+#         'priority': 'high',
+#     }
+#     response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
 
 
 @csrf_exempt
@@ -149,7 +150,7 @@ def following(request, uid0=None, uid1=None):
                     if chatMember.chat in chatDict:
                         chat = chatMember.chat
 
-                        docRef = db.collection(os.environ["CHAT_COLLECTION_NAME"]).document(chat.chatID)
+                        docRef = db.collection('CHATS').document(chat.chatID)
                         colRef = docRef.collection("chats")
                         for doc in colRef.stream():
                             doc.reference.delete()
