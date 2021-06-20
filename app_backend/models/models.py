@@ -10,6 +10,7 @@ from google.cloud import storage, firestore
 
 db = firestore.Client()
 
+
 class Preferences(models.Model):
 	'''
 		Contains a value between 0 and 1 for each relevant type of content. This model is used to

@@ -5,6 +5,10 @@ from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 from django.views.decorators.csrf import csrf_exempt
 
+import firebase_admin
+
+default_app = firebase_admin.initialize_app()
+
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
@@ -104,6 +108,7 @@ def user(request, uid=None):
 		# When deleting a user account, the Preference and Profile models that are associated with
 		# it have to also be deleted. the method, delete_account(), takes care of that. 
 		if request.method == "DELETE":
+			firebase_admin.auth.delete_user(user.uid)
 			user.delete_account()
 			return HttpResponse(status=200)
 			

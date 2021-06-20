@@ -2,6 +2,8 @@ import sys
 
 import numpy as np
 
+from firebase_admin import auth
+
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 
