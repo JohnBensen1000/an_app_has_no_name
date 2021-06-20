@@ -1,0 +1,3 @@
+app_backend/db.sqlite3
+
+app_backend/cloud_sql_proxy

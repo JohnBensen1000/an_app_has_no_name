@@ -125,30 +125,30 @@ def recommendations(request, uid=None):
         return HttpResponse(status=500)
 
 def following(request, uid=None):
-    try:
-        # Returns a list of posts made by all creators that a user is following. Starts looking through
-        # all the posts that the user has not watched yet, and if there is room, fills in the rest of the
-        # list with posts that the user did already watch. 
-        if request.method == "GET":
-            listSize   = 16
-            user       = User.objects.get(uid=uid)
-            followings = [relationship.creator for relationship in Relationships.objects.filter(follower=user)]
+	try:
+		# Returns a list of posts made by all creators that a user is following. Starts looking through
+		# all the posts that the user has not watched yet, and if there is room, fills in the rest of the
+		# list with posts that the user did already watch. 
+		if request.method == "GET":
+			listSize   = 16
+			user       = User.objects.get(uid=uid)
+			followings = [relationship.creator for relationship in Relationships.objects.filter(follower=user)]
 
-            postsList = list()
-            for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-                if user not in post.watchedBy.all():
-                    postsList.append(post.to_dict())
-                if len(postsList) == listSize:
-                    return JsonResponse({"posts": postsList})   
+			postsList = list()
+			for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
+				if user not in post.watchedBy.all():
+					postsList.append(post.to_dict())
+				if len(postsList) == listSize:
+					return JsonResponse({"posts": postsList})   
 
-            for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-                postsList.append(post.to_dict())
-                if len(postsList) == listSize:
-                    return JsonResponse({"posts": postsList})      
+			for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
+				postsList.append(post.to_dict())
+				if len(postsList) == listSize:
+					return JsonResponse({"posts": postsList})      
 
-            return JsonResponse({"posts": postsList})        
+			return JsonResponse({"posts": postsList})        
 
-    except:
-        print(" [ERROR]", sys.exc_info())
-        return HttpResponse(status=500)
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
 

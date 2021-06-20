@@ -137,3 +137,21 @@ def post(request, uid=None, postID=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+
+@csrf_exempt
+def reports(request, uid=None, postID=None):
+	try:
+		post = Post.objects.get(postID=postID)
+
+		if request.method == "POST":
+			post.numReports = post.numReports + 1
+			if post.numReports == 5:
+				post.delete_post()
+			else:
+				post.save()
+
+			return HttpResponse(status=201)
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+

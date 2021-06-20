@@ -184,6 +184,7 @@ class Post(models.Model):
 	isImage     = models.BooleanField()
 	timeCreated = models.DateField(default=timezone.now) 
 	downloadURL = models.TextField()
+	numReports  = models.IntegerField(default=0)
 
 	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 
