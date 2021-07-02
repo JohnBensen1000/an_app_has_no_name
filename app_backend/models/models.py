@@ -10,6 +10,7 @@ from google.cloud import storage, firestore
 
 db = firestore.Client()
 
+client = storage.Client(project="entropy-317014")
 
 class Preferences(models.Model):
 	'''
@@ -75,7 +76,7 @@ class User(models.Model):
 	'''
 	userID = models.CharField(max_length=50, unique=True) 
 	email  = models.CharField(max_length=50, unique=True) 
-	phone  = models.CharField(max_length=15, unique=True) 
+	phone  = models.CharField(max_length=15, default="") 
 	uid    = models.CharField(max_length=50, unique=True) 
 	
 	deviceToken = models.TextField(default="")
@@ -92,12 +93,6 @@ class User(models.Model):
 	profile = models.OneToOneField(
 		Profile, 
 		on_delete=models.CASCADE,
-	)
-
-	allRelationships = models.ManyToManyField(
-		'self', 
-		through='Relationships', 
-		symmetrical=False
 	)
 
 	@property
@@ -120,23 +115,22 @@ class User(models.Model):
 			'profileColor': self.profileColor
 		}
 
-class Relationships(models.Model):
+class Following(models.Model):
 	'''
-		Defines a one way relationship between one user and another. RELATION_TYPE keeps track of 
-		the type of relation that exists between these two users. 
+		Keeps track of the fact that one user is a creator. The boolean field newFollower is True if
+	 	this user is a new follower.
 	'''
-	following = 0
-	blocked   = 1
-
-	RELATION_TYPE = (
-		(following, 'Following'),
-		(blocked, 'Blocked'),
-	)
 
 	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
 	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
-	relation    = models.IntegerField(choices=RELATION_TYPE, default=following)
 	newFollower = models.BooleanField(default=True)
+
+class Blocked(models.Model):
+	'''
+		Keeps track of the fact that a user is currently blocking a creator.
+	'''
+	user    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='is_blocking')
+	creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blocked_by")
 
 class Chat(models.Model):
 	'''

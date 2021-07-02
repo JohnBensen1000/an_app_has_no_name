@@ -145,7 +145,7 @@ def reports(request, uid=None, postID=None):
 
 		if request.method == "POST":
 			post.numReports = post.numReports + 1
-			if post.numReports == 5:
+			if post.numReports == 1:	
 				post.delete_post()
 			else:
 				post.save()

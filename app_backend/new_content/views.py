@@ -11,7 +11,8 @@ User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
 Profile       = apps.get_model("models", "Profile")
 Post          = apps.get_model("models", "Post")
-Relationships = apps.get_model("models", "Relationships")
+Following     = apps.get_model("models", "Following")
+Blocked       = apps.get_model("models", "Blocked")
 
 class PostNode:
 	def __init__(self, post, score):
@@ -97,32 +98,33 @@ class LinkedList:
 		self.size     -= 1
 
 def recommendations(request, uid=None):
-    try:
-        # Returns a list of recommended posts for the user. Only recommends a post if: the user has not
-        # watched the post yet, the user is not the creator, and the user is not following the post's
-        # creator. TODO: Document how the algorithm works. 
-        if request.method == "GET":
-            user       = User.objects.get(uid=uid)
-            userPref   = np.array(user.preferences.list)
-            linkedList = LinkedList()
-            
-            for post in Post.objects.exclude():
-                userAlreadyWatched     = post.watchedBy.filter(uid=uid).exists()
-                userIsCreator          = post.creator.uid == uid
-                userIsFollowingCreator = Relationships.objects.filter(follower=user, creator=post.creator)
+	try:
+		# Returns a list of recommended posts for the user. Only recommends a post if: the user has not
+		# watched the post yet, the user is not the creator, and the user is not following the post's
+		# creator. TODO: Document how the algorithm works. 
+		if request.method == "GET":
+			user       = User.objects.get(uid=uid)
+			userPref   = np.array(user.preferences.list)
+			linkedList = LinkedList()
+			
+			for post in Post.objects.exclude():
+				userAlreadyWatched     = post.watchedBy.filter(uid=uid).exists()
+				userIsCreator          = post.creator.uid == uid
+				userIsFollowingCreator = Following.objects.filter(follower=user, creator=post.creator)
+				userIsBlockingCreator  = Blocked.objects.filter(user=user, creator=post.creator)
 
-                if not (userAlreadyWatched or userIsCreator or userIsFollowingCreator):
-                    postPref = np.array(post.preferences.list)
-                    score    = userPref @ postPref
+				if not (userAlreadyWatched or userIsCreator or userIsFollowingCreator or userIsBlockingCreator):
+					postPref = np.array(post.preferences.list)
+					score    = userPref @ postPref
 
-                    postNode = PostNode(post, score)
-                    linkedList.add_node(postNode)
-            
-            return JsonResponse({"posts": linkedList.get_list_of_nodes()})
+					postNode = PostNode(post, score)
+					linkedList.add_node(postNode)
+			
+			return JsonResponse({"posts": linkedList.get_list_of_nodes()})
 
-    except:
-        print(" [ERROR]", sys.exc_info())
-        return HttpResponse(status=500)
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
 
 def following(request, uid=None):
 	try:
@@ -132,7 +134,7 @@ def following(request, uid=None):
 		if request.method == "GET":
 			listSize   = 16
 			user       = User.objects.get(uid=uid)
-			followings = [relationship.creator for relationship in Relationships.objects.filter(follower=user)]
+			followings = [relationship.creator for relationship in Following.objects.filter(follower=user)]
 
 			postsList = list()
 			for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
@@ -141,10 +143,10 @@ def following(request, uid=None):
 				if len(postsList) == listSize:
 					return JsonResponse({"posts": postsList})   
 
-			for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
-				postsList.append(post.to_dict())
-				if len(postsList) == listSize:
-					return JsonResponse({"posts": postsList})      
+			# for post in Post.objects.filter(creator__in=followings).order_by('postID').reverse():
+			# 	postsList.append(post.to_dict())
+			# 	if len(postsList) == listSize:
+			# 		return JsonResponse({"posts": postsList})      
 
 			return JsonResponse({"posts": postsList})        
 

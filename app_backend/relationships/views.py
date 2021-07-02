@@ -16,9 +16,10 @@ serverToken = 'AAAALGfgH5A:APA91bH1FgqgJOZ4LQds7XgnRxatrIxZgP9hzvx8MItG8fsgxDGAg
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
 Profile       = apps.get_model("models", "Profile")
-Relationships = apps.get_model("models", "Relationships")
+Following     = apps.get_model("models", "Following")
 ChatMember    = apps.get_model("models", "ChatMember")
 Chat          = apps.get_model("models", "Chat")
+Blocked       = apps.get_model("models", "Blocked")
 
 def create_new_direct_message(user1, user2):
     chat = Chat.objects.create(
@@ -45,11 +46,11 @@ def followings(request, uid=None):
         # friend of the user or not. 
         if request.method == "GET":
             followingsList = list()
-            for following in user.followings.filter(relation=Relationships.following):
+            for following in Following.objects.filter(follower=user):
                 creator = following.creator
                 followingsList.append({
                     "user":     creator.to_dict(),
-                    "isFriend": Relationships.objects.filter(follower=creator, creator=user).exists()
+                    "isFriend": Following.objects.filter(follower=creator, creator=user).exists()
                 })
 
             return JsonResponse({"followings": followingsList})
@@ -58,13 +59,16 @@ def followings(request, uid=None):
         # creator is identified by 'uid' given in the request body. 'newFollower' is a field in 
         # Relationship that keeps track of whether or not to notify a creator that a new user started
         # following them. This will only be set to True if the creator is not already following that 
-        # new user. 
+        # new user. Deletes
         if request.method == "POST":
             requestBody = json.loads(request.body)
             creator     = User.objects.get(uid=requestBody['uid'])
-            isNewFriend = Relationships.objects.filter(follower=creator, creator=user).exists()
+            isNewFriend = Following.objects.filter(follower=creator, creator=user).exists()
 
-            Relationships.objects.create(
+            if Blocked.objects.filter(user=user, creator=creator).exists():
+                Blocked.objects.filter(user=user, creator=creator).delete()
+
+            Following.objects.create(
                 follower    = user,
                 creator     = creator,
                 newFollower = not isNewFriend, 
@@ -82,11 +86,35 @@ def followings(request, uid=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
+@csrf_exempt
+def blocked(request, uid=None):
+    try:
+        if request.method == "POST":
+            requestBody = json.loads(request.body)
+            user        = User.objects.get(uid=uid)
+            creator     = User.objects.get(uid=requestBody['uid'])  
+
+            if Following.objects.filter(follower=user, creator=creator).exists():
+                Following.objects.filter(follower=user, creator=creator).delete()
+
+            Blocked.objects.create(
+                user    = user,
+                creator = creator,
+            )
+
+            delete_direct_messages_if_exists(user, creator)
+
+            return HttpResponse(status=201)
+
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)      
+
 # def send_new_followers(user):
 # 	# Sends a push notification to a user with a list of all of their new followers. Sends
 # 	# notification through google firebase to a device (identified by userProfile.deviceToken).
 
-#     newFollowers = [relation.follower.to_dict() for relation in Relationships.objects.filter(newFollower=True, creator=user)]
+#     newFollowers = [relation.follower.to_dict() for relation in Following.objects.filter(newFollower=True, creator=user)]
 
 #     headers = {
 #         'Content-Type': 'application/json',
@@ -110,21 +138,21 @@ def following(request, uid0=None, uid1=None):
 
         # Checks to see if a user (identified by uid0) is followering another user (identified by uid1)
         if request.method == "GET":
-            isFollowing = Relationships.objects.filter(follower=follower, creator=creator).exists()
+            isFollowing = Following.objects.filter(follower=follower, creator=creator).exists()
             return JsonResponse({"isFollowing": isFollowing})
 
         # Allows a user to follow back or not follow back a new follower. Either way, the user's new
         # follower will no longer be labeled as a new follower. Returns a 201 status code if the user
         # decides to follow back, returns 200 otherwise. 
         if request.method == "POST":
-            following             = Relationships.objects.get(follower=follower, creator=creator)
+            following             = Following.objects.get(follower=follower, creator=creator)
             following.newFollower = False
             following.save()
 
             requestBody = json.loads(request.body)
 
             if requestBody['followBack']:
-                Relationships.objects.create(
+                Following.objects.create(
                     follower    = creator,
                     creator     = follower,
                     newFollower = False, 
@@ -139,27 +167,9 @@ def following(request, uid0=None, uid1=None):
         # deletes the direct message between the two. This includes deleting the chat data in 
         # firestore and the chat entity in the database. 
         if request.method == "DELETE":
-            if Relationships.objects.filter(follower=creator, creator=follower).exists():
-                chatDict = dict()
+            delete_direct_messages_if_exists(follower, creator)
 
-                for chatMember in ChatMember.objects.filter(member=follower):
-                    if chatMember.chat.isDirectMessage:
-                        chatDict[chatMember.chat] = True
-
-                for chatMember in ChatMember.objects.filter(member=creator):
-                    if chatMember.chat in chatDict:
-                        chat = chatMember.chat
-
-                        docRef = db.collection('CHATS').document(chat.chatID)
-                        colRef = docRef.collection("chats")
-                        for doc in colRef.stream():
-                            doc.reference.delete()
-
-                        docRef.delete()
-                        chat.delete()
-
-
-            following = Relationships.objects.get(follower=follower, creator=creator)
+            following = Following.objects.get(follower=follower, creator=creator)
             following.delete()
 
             return HttpResponse(status=200)
@@ -175,7 +185,7 @@ def followers(request, uid=None):
         if request.method == "GET":
             user         = User.objects.get(uid=uid)
             followerList = list() 
-            for relationship in Relationships.objects.filter(creator=user):
+            for relationship in Following.objects.filter(creator=user):
                 followerList.append(relationship.follower.to_dict())
 
             return JsonResponse({'followerList': followerList})
@@ -191,7 +201,7 @@ def new_followers(request, uid=None):
         if request.method == "GET":
             user         = User.objects.get(uid=uid)
             followerList = list() 
-            for relationship in Relationships.objects.filter(creator=user, newFollower=True):
+            for relationship in Following.objects.filter(creator=user, newFollower=True):
                 followerList.append(relationship.follower.to_dict())
 
             return JsonResponse({'followerList': followerList})
@@ -208,9 +218,9 @@ def friends(request, uid=None):
             user        = User.objects.get(uid=uid)
             friendsList = list() 
 
-            for relationship in Relationships.objects.filter(creator=user):
+            for relationship in Following.objects.filter(creator=user):
                 follower = relationship.follower
-                if Relationships.objects.filter(creator=follower, follower=user):
+                if Following.objects.filter(creator=follower, follower=user):
                     friendsList.append(follower.to_dict())
 
             return JsonResponse({'friendsList': friendsList})
@@ -218,3 +228,23 @@ def friends(request, uid=None):
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
+
+def delete_direct_messages_if_exists(follower, creator):
+    if Following.objects.filter(follower=creator, creator=follower).exists():
+        chatDict = dict()
+
+        for chatMember in ChatMember.objects.filter(member=follower):
+            if chatMember.chat.isDirectMessage:
+                chatDict[chatMember.chat] = True
+
+        for chatMember in ChatMember.objects.filter(member=creator):
+            if chatMember.chat in chatDict:
+                chat = chatMember.chat
+
+                docRef = db.collection('CHATS').document(chat.chatID)
+                colRef = docRef.collection("chats")
+                for doc in colRef.stream():
+                    doc.reference.delete()
+
+                docRef.delete()
+                chat.delete()

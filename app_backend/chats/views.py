@@ -16,7 +16,6 @@ db = firestore.Client()
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
 Profile       = apps.get_model("models", "Profile")
-Relationships = apps.get_model("models", "Relationships")
 ChatMember    = apps.get_model("models", "ChatMember")
 Chat          = apps.get_model("models", "Chat")
 

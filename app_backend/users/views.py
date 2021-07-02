@@ -57,7 +57,7 @@ def new_user(request):
 			newUser = json.loads(request.body)
 
 			fieldsTaken = list()
-			for uniqueField in ["userID", "email", "phone", "uid"]:
+			for uniqueField in ["userID", "email", "uid"]:
 				filter              = {}
 				filter[uniqueField] = newUser[uniqueField]
 
@@ -71,7 +71,7 @@ def new_user(request):
 				user = User.objects.create(
 					userID      = newUser["userID"],
 					email       = newUser['email'],
-					phone       = newUser['phone'],
+					# phone       = newUser['phone'],
 					uid         = newUser["uid"],
 					username    = newUser["username"],
 					preferences = Preferences.objects.create(),

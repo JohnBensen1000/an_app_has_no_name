@@ -246,64 +246,64 @@ Post        = apps.get_model("models", "Post")
 #         self.assertEqual(self.post.watchedBy.first().uid, uid)
 
 
-class ReportsTest(TestCase):
-    def setUp(self):
-        self.userID   = "John"
-        self.username = "John Bensen"
-        self.uid      = 'UNIT_TEST'
-        self.postID   = "1"
+# class ReportsTest(TestCase):
+#     def setUp(self):
+#         self.userID   = "John"
+#         self.username = "John Bensen"
+#         self.uid      = 'UNIT_TEST'
+#         self.postID   = "1"
 
-        self.user = User.objects.create(
-            userID   = self.userID,
-            email    = self.userID + "@gmail.com",
-            phone    = self.userID + "12345",
-            username = self.username,
-            uid      = self.uid,
-            preferences = Preferences.objects.create(),
-            profile     = Profile.objects.create(),
-        )
+#         self.user = User.objects.create(
+#             userID   = self.userID,
+#             email    = self.userID + "@gmail.com",
+#             phone    = self.userID + "12345",
+#             username = self.username,
+#             uid      = self.uid,
+#             preferences = Preferences.objects.create(),
+#             profile     = Profile.objects.create(),
+#         )
 
-        self.post = Post.objects.create(
-            postID      = self.postID,
-            preferences = Preferences.objects.create(),
-            creator     = self.user,
-            isImage	    = True,
-            isPrivate   = False,
-            downloadURL = "123.com"
-        )
-        self.client = Client()
-        self.url    = reverse('reports', kwargs={'uid': self.uid, 'postID': self.postID}) 
+#         self.post = Post.objects.create(
+#             postID      = self.postID,
+#             preferences = Preferences.objects.create(),
+#             creator     = self.user,
+#             isImage	    = True,
+#             isPrivate   = False,
+#             downloadURL = "123.com"
+#         )
+#         self.client = Client()
+#         self.url    = reverse('reports', kwargs={'uid': self.uid, 'postID': self.postID}) 
 
-    def test_post_report(self):
-        response1 = self.client.post(self.url, None)
-        response2 = self.client.post(self.url, None)
-        response3 = self.client.post(self.url, None)
+#     def test_post_report(self):
+#         response1 = self.client.post(self.url, None)
+#         response2 = self.client.post(self.url, None)
+#         response3 = self.client.post(self.url, None)
 
-        self.assertEqual(response1.status_code, 201)
-        self.assertEqual(response2.status_code, 201)
-        self.assertEqual(response3.status_code, 201)
+#         self.assertEqual(response1.status_code, 201)
+#         self.assertEqual(response2.status_code, 201)
+#         self.assertEqual(response3.status_code, 201)
 
-        numPosts = Post.objects.all().count()
+#         numPosts = Post.objects.all().count()
 
-        self.assertEqual(numPosts, 1)
+#         self.assertEqual(numPosts, 1)
 
-        updatedPost = Post.objects.get(postID=self.postID)
+#         updatedPost = Post.objects.get(postID=self.postID)
 
-        self.assertEqual(updatedPost.numReports, 3)
+#         self.assertEqual(updatedPost.numReports, 3)
 
-    def test_post_reports_until_delete(self):
-        response1 = self.client.post(self.url, None)
-        response2 = self.client.post(self.url, None)
-        response3 = self.client.post(self.url, None)
-        response4 = self.client.post(self.url, None)
-        response5 = self.client.post(self.url, None)
+#     def test_post_reports_until_delete(self):
+#         response1 = self.client.post(self.url, None)
+#         response2 = self.client.post(self.url, None)
+#         response3 = self.client.post(self.url, None)
+#         response4 = self.client.post(self.url, None)
+#         response5 = self.client.post(self.url, None)
 
-        self.assertEqual(response1.status_code, 201)
-        self.assertEqual(response2.status_code, 201)
-        self.assertEqual(response3.status_code, 201)
-        self.assertEqual(response4.status_code, 201)
-        self.assertEqual(response5.status_code, 201)
+#         self.assertEqual(response1.status_code, 201)
+#         self.assertEqual(response2.status_code, 201)
+#         self.assertEqual(response3.status_code, 201)
+#         self.assertEqual(response4.status_code, 201)
+#         self.assertEqual(response5.status_code, 201)
 
-        numPosts = Post.objects.all().count()
+#         numPosts = Post.objects.all().count()
 
-        self.assertEqual(numPosts, 0)
+#         self.assertEqual(numPosts, 0)
