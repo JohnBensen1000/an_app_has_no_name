@@ -2,6 +2,8 @@ import sys
 import json
 import os
 from datetime import datetime
+import smtplib
+import ssl
 
 import numpy as np
 
@@ -143,15 +145,33 @@ def reports(request, uid=None, postID=None):
 	try:
 		post = Post.objects.get(postID=postID)
 
+		# If the user reports an indivudal post, sends an email to the administrator
+		# with the post's details. The administrator can then decide whether to delete
+		# the post or not.
+
 		if request.method == "POST":
 			post.numReports = post.numReports + 1
-			if post.numReports == 1:	
-				post.delete_post()
-			else:
-				post.save()
+			post.save()
+
+			send_reported_content_email(post)
 
 			return HttpResponse(status=201)
 	except:
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+def send_reported_content_email(post):
+	port    = 465 
+	context = ssl.create_default_context()
+
+	with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+		server.login("entropy.developer1@gmail.com", "CominG1$is@Winter6*9sNow11")
+		server.sendmail(
+			"entropy.developer1@gmail.com", 
+			"entropy.developer1@gmail.com", 
+			"""
+				Post ID: %s\n
+			 	Download URL: %s\n
+				User: %s\n
+			""" % (post.postID, post.downloadURL, post.creator.uid)
+		)
