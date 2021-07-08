@@ -2,6 +2,10 @@ import datetime
 import sys
 import json
 import os
+import smtplib
+import ssl
+
+from better_profanity import profanity
 
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -14,12 +18,18 @@ db = firestore.Client()
 def comments(request, postID=None):
     try:
         # Recieves a json object with three fields: "comment", "uid", and "path". "comment" contains 
-        # the actual comment itself. "uid" is the uid of the user who posted the comment. "path" 
-        # is the directory of where the new comment will be stored in the firestore database. The "path"
-        # string will be stored in the database so that when someone posts a comment responding to this 
-        # comment, the new comment will know where to be placed in the database.    
+        # the actual comment itself. If the comment contains profanity, returns a json response telling the
+        # client that the comment contains profanity. "uid" is the uid of the user who posted the comment. 
+        # "path" is the directory of where the new comment will be stored in the firestore database. The 
+        # "path" string will be stored in the database so that when someone posts a comment responding to 
+        # this comment, the new comment will know where to be placed in the database.    
+        
         if request.method == "POST":
-            requestJson   = json.loads(request.body)
+            requestJson = json.loads(request.body)
+
+            if profanity.contains_profanity(requestJson["comment"]):
+                return JsonResponse({"reasonForDenial": "profanity"})
+
             path          = requestJson["path"] + "/c/" + str(int(datetime.datetime.now().timestamp()))
             commentDocRef = db.document('COMMENTS' + "/%d" % postID + path)
 
@@ -64,3 +74,30 @@ def get_all_comments(collection, level):
             allComments.extend(subComments)
 
     return allComments
+
+@csrf_exempt
+def report(request, postID):
+    try:
+        if request.method == "POST":
+            send_reported_comment_email(postID, json.loads(request.body))
+            return HttpResponse(status=201)
+
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)
+
+def send_reported_comment_email(postID, commentJson):
+	port    = 465 
+	context = ssl.create_default_context()
+
+	with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+		server.login("entropy.developer1@gmail.com", "CominG1$is@Winter6*9sNow11")
+		server.sendmail(
+			"entropy.developer1@gmail.com", 
+			"entropy.developer1@gmail.com", 
+			"""
+				Comment: %s\n
+			 	Comment path: %s\n
+				Post ID: %s\n
+			""" % (commentJson["comment"], commentJson["path"], postID)
+		)

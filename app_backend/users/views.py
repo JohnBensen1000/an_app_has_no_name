@@ -16,15 +16,15 @@ Profile     = apps.get_model("models", "Profile")
 @csrf_exempt
 def search(request):
 	try:
-		# Recieves a string and returns a list of all users whose username contains the string. If 
-		# no usernames contain this string, returns an empty list.
+		# Recieves a string and returns a list of all users whose userID contains the string. If 
+		# no userID contain this string, returns an empty list.
 		if request.method == "GET":
 			searchString = request.GET["contains"]
 
 			if searchString == '':
 				return JsonResponse({"creatorsList": []})
 
-			objectList   = User.objects.filter(username__icontains=searchString)
+			objectList   = User.objects.filter(userID__icontains=searchString)
 			creatorList  = [user.to_dict() for user in objectList]
 
 			if creatorList == []:

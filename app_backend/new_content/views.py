@@ -113,7 +113,7 @@ def recommendations(request, uid=None):
 				userIsFollowingCreator = Following.objects.filter(follower=user, creator=post.creator)
 				userIsBlockingCreator  = Blocked.objects.filter(user=user, creator=post.creator)
 
-				if not (userAlreadyWatched or userIsCreator or userIsFollowingCreator or userIsBlockingCreator or post.numReports > 5):
+				if not (userAlreadyWatched or userIsCreator or userIsFollowingCreator or userIsBlockingCreator):
 					postPref = np.array(post.preferences.list)
 					score    = userPref @ postPref
 
