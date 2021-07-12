@@ -176,7 +176,7 @@ class Post(models.Model):
 	postID      = models.CharField(max_length=100, primary_key=True)
 	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
-	timeCreated = models.DateField(default=timezone.now) 
+	timeCreated = models.DateTimeField() 
 	downloadURL = models.TextField()
 	numReports  = models.IntegerField(default=0)
 
@@ -188,10 +188,16 @@ class Post(models.Model):
 		related_name="created"
 	)
 
-	watchedBy = models.ManyToManyField(
-		User,
-		related_name="watched",
-	)
+	# watchedBy = models.ManyToManyField(
+	# 	User,
+	# 	related_name="watched",
+	# )
+
+	def save(self, *args, **kwargs):
+		if self.timeCreated == None:
+			self.timeCreated = datetime.datetime.now(tz=timezone.utc)
+		super(Post, self).save()
+
 
 	def delete_post(self):
 		if self.preferences:
@@ -206,3 +212,11 @@ class Post(models.Model):
 			'isImage':     self.isImage,
 			'downloadURL': self.downloadURL,
 		}
+
+class WatchedBy(models.Model):
+	'''
+		Many to many model that keeps track of which users watched which post. Each entity
+		contains a User and a Post, and records the fact that a User has watched a Post.
+	'''
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	post = models.ForeignKey(Post, on_delete=models.CASCADE)
