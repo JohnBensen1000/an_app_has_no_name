@@ -39,7 +39,7 @@ def comments(request, postID=None):
                 u'comment':    requestJson["comment"],
                 u'path':       path,
             })
-            return HttpResponse(status=201)
+            return JsonResponse({"reasonForDenial": None}, status=201)
 
         # Gets a list of the comments of a post. 
         if request.method == "GET":
