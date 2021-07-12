@@ -18,8 +18,8 @@ Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
 Post        = apps.get_model("models", "Post")
 
-client = storage.Client(project="entropy")
-bucket = client.get_bucket("entropy-317014.appspot.com")
+client = storage.Client(project=os.getenv("CLIENT"))
+bucket = client.get_bucket(os.getenv("BUCKET"))
 
 @csrf_exempt
 def watched_list(request, postID=None):

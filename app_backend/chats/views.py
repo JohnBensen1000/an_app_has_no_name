@@ -19,8 +19,8 @@ Profile       = apps.get_model("models", "Profile")
 ChatMember    = apps.get_model("models", "ChatMember")
 Chat          = apps.get_model("models", "Chat")
 
-client = storage.Client(project="entropy")
-bucket = client.get_bucket("entropy-317014.appspot.com")
+client = storage.Client(project=os.getenv("CLIENT"))
+bucket = client.get_bucket(os.getenv("BUCKET"))
 
 @csrf_exempt
 def chats(request, uid=None):

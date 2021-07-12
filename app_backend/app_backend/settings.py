@@ -83,28 +83,37 @@ WSGI_APPLICATION = 'app_backend.wsgi.application'
 #     }
 # }
 
-if os.getenv('GAE_APPLICATION', None):
+if os.getenv("ENVIRONMENT") == "develop":
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'HOST': '/cloudsql/entropy-317014:us-central1:entropy-instance-1',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'thisismypassword1221',
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'db.sqlite3',
         }
     }
 
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'thisismypassword1221',
+    if os.getenv('GAE_APPLICATION', None):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'HOST': '/cloudsql/entropy-317014:us-central1:entropy-instance-1',
+                'NAME': 'postgres',
+                'USER': 'postgres',
+                'PASSWORD': 'thisismypassword1221',
+            }
         }
-    }
+
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'HOST': '127.0.0.1',
+                'PORT': '3306',
+                'NAME': 'postgres',
+                'USER': 'postgres',
+                'PASSWORD': 'thisismypassword1221',
+            }
+        }
 
 
 # Password validation
