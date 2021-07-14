@@ -8,5 +8,6 @@ urlpatterns = [
     path('<slug:uid>/followers/',                   followers,      name='followers'),
     path('<slug:uid>/followers/new/',               new_followers,  name='new_followers'),
     path('<slug:uid>/blocked/',                     blocked,        name='blocked'),
+    path('<slug:uid>/blocked/<slug:creator_uid>/',  blocked_user,   name='blocked_user'),
     path('<slug:uid>/friends/',                     friends,        name='friends'),
 ]

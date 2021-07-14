@@ -26,11 +26,16 @@ bucket = client.get_bucket(os.getenv("BUCKET"))
 def watched_list(request, postID=None):
 	try:
 		# Creates a watchedBy entity to record that a user has watched a post. Updates both
-		# the user's and post's preferences lists based on the user's feedback. 
+		# the user's and post's preferences lists based on the user's feedback. If the user
+		# has already watched the post, then no new entity is created.
+		
 		if request.method == "POST":
 			watchedJson = json.loads(request.body)
 			user = User.objects.get(uid=watchedJson['uid'])
 			post = Post.objects.get(postID=postID)
+
+			if WatchedBy.objects.filter(user=user, post=post).exists():
+				return HttpResponse(status=200)
 
 			userPref = np.array(user.preferences.list)
 			postPref = np.array(post.preferences.list)

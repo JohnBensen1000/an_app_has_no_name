@@ -89,6 +89,8 @@ def followings(request, uid=None):
 @csrf_exempt
 def blocked(request, uid=None):
     try:
+        # Creates a blocked relationship between two users. Deletes the following relationship
+        # and direct message between the two users if they exist.
         if request.method == "POST":
             requestBody = json.loads(request.body)
             user        = User.objects.get(uid=uid)
@@ -109,6 +111,22 @@ def blocked(request, uid=None):
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)      
+
+@csrf_exempt
+def blocked_user(request, uid=None, creator_uid=None):
+    try:
+        # Deletes a blocked relationship between two users.
+        if request.method == "DELETE":
+            user        = User.objects.get(uid=uid)
+            creator     = User.objects.get(uid=creator_uid)
+
+            Blocked.objects.filter(user=user, creator=creator).delete()
+
+            return HttpResponse(status=200)
+
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)     
 
 # def send_new_followers(user):
 # 	# Sends a push notification to a user with a list of all of their new followers. Sends

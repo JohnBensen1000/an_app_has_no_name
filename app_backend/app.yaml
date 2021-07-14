@@ -12,3 +12,8 @@ handlers:
 - url: /.*
   script: auto
 # [END django_app]
+
+env_variables:
+  CLIENT: "entropy"
+  BUCKET: "entropy-317014.appspot.com"
+  ENVIRONMENT: "production"

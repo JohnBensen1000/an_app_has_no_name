@@ -433,6 +433,19 @@ class BlockedTest(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Blocked.objects.filter(user=self.user1, creator=self.user2).exists(), True)
 
+    def test_unblock_user(self):
+        Blocked.objects.create(
+            user    = self.user1,
+            creator = self.user2,
+        )
+
+        url = reverse("blocked_user", kwargs={"uid": self.user1.uid, "creator_uid": self.user2.uid})
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Blocked.objects.filter(user=self.user1, creator=self.user2).exists(), False)
+
     def test_blocking_creator_that_user_follows(self):
         Following.objects.create(
             follower = self.user1,
