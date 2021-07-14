@@ -12,25 +12,33 @@ default_app = firebase_admin.initialize_app()
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
+Blocked     = apps.get_model("models", "Blocked")
 
 @csrf_exempt
-def search(request):
+def search(request, uid=None):
 	try:
 		# Recieves a string and returns a list of all users whose userID contains the string. If 
-		# no userID contain this string, returns an empty list.
+		# no userID contain this string, returns an empty list. Does not return any creators that
+		# the user (given by uid) is currently blocking.
+		
 		if request.method == "GET":
+			user         = User.objects.get(uid=uid)
 			searchString = request.GET["contains"]
 
 			if searchString == '':
 				return JsonResponse({"creatorsList": []})
 
 			objectList   = User.objects.filter(userID__icontains=searchString)
-			creatorList  = [user.to_dict() for user in objectList]
+			creatorsList = list()
 
-			if creatorList == []:
+			for creator in objectList:
+				if not Blocked.objects.filter(user=user, creator=creator).exists() and creator.uid != user.uid:
+					creatorsList.append(creator.to_dict())
+
+			if creatorsList == []:
 				return JsonResponse({"creatorsList": []})
 			else:
-				return JsonResponse({"creatorsList": creatorList})
+				return JsonResponse({"creatorsList": creatorsList})
 
 	except:
 		print(" [ERROR]", sys.exc_info())

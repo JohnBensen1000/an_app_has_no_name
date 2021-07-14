@@ -220,3 +220,11 @@ class WatchedBy(models.Model):
 	'''
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+class Reported(models.Model):
+	'''
+		Keeps track of the fact that a user has reported a post. This is used to prevent
+		recommending posts that a user has reported.
+	'''
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	post = models.ForeignKey(Post, on_delete=models.CASCADE)

@@ -14,6 +14,7 @@ Post          = apps.get_model("models", "Post")
 Following     = apps.get_model("models", "Following")
 Blocked       = apps.get_model("models", "Blocked")
 WatchedBy     = apps.get_model("models", "WatchedBy")
+Reported      = apps.get_model("models", "Reported")
 
 class PostNode:
 	def __init__(self, post, score):
@@ -106,7 +107,7 @@ def recommendations(request, uid=None):
 		# list, fills in the rest of the list with posts that theuser did already watch (these posts 
 		# are orderd based on when they were created). The list of post does not include posts from 
 		# creators that the user isfollowing or is blocking. The list also does not include posts that
-		# the user has created. 
+		# the user has created or has reported.
 
 		if request.method == "GET":
 			listSize   = 16
@@ -114,12 +115,14 @@ def recommendations(request, uid=None):
 			userPref   = np.array(user.preferences.list)
 			linkedList = LinkedList()
 
-			watchedList  = [watchedBy.post.postID for watchedBy in WatchedBy.objects.filter(user=user)]
-			creatorsList = [following.creator for following in Following.objects.filter(follower=user)]
+			watchedList  = [watchedBy.post.postID for watchedBy in WatchedBy.objects.filter(user=user)    ]
+			creatorsList = [following.creator     for following in Following.objects.filter(follower=user)]
+			reportedList = [reported.post.postID  for reported in Reported.objects.filter(user=user)      ]
+
 			creatorsList.extend([blocked.creator for blocked in Blocked.objects.filter(user=user)])
 		 
-			notWatchedPosts = Post.objects.exclude(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList)
-			watchedPosts    = Post.objects.filter(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList)
+			notWatchedPosts = Post.objects.exclude(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
+			watchedPosts    = Post.objects.filter(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
 
 			for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
 				postPref = np.array(post.preferences.list)

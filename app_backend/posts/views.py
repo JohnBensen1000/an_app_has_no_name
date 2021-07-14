@@ -18,6 +18,7 @@ Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
 Post        = apps.get_model("models", "Post")
 WatchedBy   = apps.get_model("models", "WatchedBy")
+Reported    = apps.get_model("models", "Reported")
 
 client = storage.Client(project=os.getenv("CLIENT"))
 bucket = client.get_bucket(os.getenv("BUCKET"))
@@ -149,15 +150,16 @@ def post(request, uid=None, postID=None):
 @csrf_exempt
 def reports(request, uid=None, postID=None):
 	try:
-		post = Post.objects.get(postID=postID)
-
 		# If the user reports an indivudal post, sends an email to the administrator
 		# with the post's details. The administrator can then decide whether to delete
-		# the post or not.
+		# the post or not. Also created a new report entity that contains the user that
+		# reported the post and the post itself. 
 
 		if request.method == "POST":
-			post.numReports = post.numReports + 1
-			post.save()
+			post = Post.objects.get(postID=postID)
+			user = User.objects.get(uid=uid)
+
+			Reported.objects.create(user=user, post=post)
 
 			send_reported_content_email(post)
 
@@ -176,8 +178,10 @@ def send_reported_content_email(post):
 			"entropy.developer1@gmail.com", 
 			"entropy.developer1@gmail.com", 
 			"""
-				Post ID: %s\n
-			 	Download URL: %s\n
-				User: %s\n
-			""" % (post.postID, post.downloadURL, post.creator.uid)
+				%s
+
+				Post ID: %s
+			 	Download URL: %s
+				User: %s
+			""" % (os.getenv("ENVIRONMENT"), post.postID, post.downloadURL, post.creator.uid)
 		)

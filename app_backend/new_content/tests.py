@@ -11,6 +11,7 @@ Post        = apps.get_model("models", "Post")
 Following   = apps.get_model("models", "Following")
 WatchedBy   = apps.get_model("models", "WatchedBy")
 Blocked     = apps.get_model("models", "Blocked")
+Reported    = apps.get_model("models", "Reported")
 
 class TestNewContent(TestCase):
     def setUp(self):
@@ -151,3 +152,33 @@ class TestNewContent(TestCase):
 
         self.assertEqual(postList[3]["postID"], postNotFollowing3.postID)
         self.assertEqual(postList[4]["postID"], postNotFollowing2.postID)
+
+    def test_get_recommendations_list_excluding_reported_posts(self):
+        '''
+            This test exclusively checks if the reported posts are excluded from the list of
+            recommendated posts. 
+        '''
+        postNotFollowing0 = self.create_post_object("0", self.users[2], False)
+        postNotFollowing1 = self.create_post_object("1", self.users[3], False)
+        postNotFollowing2 = self.create_post_object("2", self.users[2], False)
+
+        postReported0 = self.create_post_object("3", self.users[3], False)
+        postReported1 = self.create_post_object("4", self.users[2], False)
+
+        Reported.objects.create(user=self.user, post=postReported0)
+        Reported.objects.create(user=self.user, post=postReported1)
+
+        url      = reverse('recommendations', kwargs={'uid': self.user.uid})
+        response = self.client.get(url)
+        postList = json.loads(response.content)["posts"]
+        postIds  = [post["postID"] for post in postList]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(postList), 3)
+
+        self.assertTrue(postNotFollowing0.postID in postIds)
+        self.assertTrue(postNotFollowing1.postID in postIds)
+        self.assertTrue(postNotFollowing2.postID in postIds)
+
+        self.assertFalse(postReported0.postID in postIds)
+        self.assertFalse(postReported1.postID in postIds)

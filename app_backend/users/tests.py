@@ -7,6 +7,7 @@ from django.apps import apps
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
+Blocked     = apps.get_model("models", "Blocked")
 
 class TestNewUser(TestCase):
     def setUp(self):
@@ -80,8 +81,18 @@ class TestNewUser(TestCase):
 
 class TestSearch(TestCase):
     def setUp(self):
+        self.user = User.objects.create(
+            userID      = 'Laura1000',
+            email       = 'email@gmail.com',
+            phone       = '5164979872',
+            uid         = 'laura1313',
+            username    = 'Laura Hayes',
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
+
         self.client = Client()
-        self.url    = reverse('search')
+        self.url    = reverse('search', kwargs={'uid': self.user.uid})
 
     def test_search_strings(self):
         user1 = {'userID': "John1000", 'username': "john"}
@@ -108,8 +119,37 @@ class TestSearch(TestCase):
         self.assertEquals(len(responseBody4['creatorsList']), 0)
         self.assertEquals(len(responseBody5['creatorsList']), 0)
 
+    def test_search_strings_with_blocked_users(self):
+        user1 = {'userID': "John1000", 'username': "john"}
+        user2 = {'userID': "Laura",    'username': "Laura Hayes"}
+        user3 = {'userID': "Andrew",   'username': "andrew"}
+        user4 = {'userID': "Andrew11", 'username': "andrew"}
+        user5 = {'userID': "jake",     'username': "jake"}
+
+        user1 = self._create_user_object(user1)
+        user2 = self._create_user_object(user2)
+        user3 = self._create_user_object(user3)
+        user4 = self._create_user_object(user4)
+        user5 = self._create_user_object(user5)
+
+        Blocked.objects.create(user=self.user, creator=user1)
+        Blocked.objects.create(user=self.user, creator=user4)
+        Blocked.objects.create(user=self.user, creator=user5)
+
+        responseBody1 = json.loads(self.client.get(self.url + '?contains=John1000').content)
+        responseBody2 = json.loads(self.client.get(self.url + '?contains=a').content)
+        responseBody3 = json.loads(self.client.get(self.url + '?contains=andrew').content)
+        responseBody4 = json.loads(self.client.get(self.url + '?contains=').content)
+        responseBody5 = json.loads(self.client.get(self.url + '?contains=JacobChen').content)
+
+        self.assertEquals(len(responseBody1['creatorsList']), 0)
+        self.assertEquals(len(responseBody2['creatorsList']), 2)
+        self.assertEquals(len(responseBody3['creatorsList']), 1)
+        self.assertEquals(len(responseBody4['creatorsList']), 0)
+        self.assertEquals(len(responseBody5['creatorsList']), 0)
+
     def _create_user_object(self, user):
-        User.objects.create(
+        return User.objects.create(
             userID   = user['userID'],
             email    = user['userID'] + '@gmail.com',
             phone    = user['userID'] + '12345',

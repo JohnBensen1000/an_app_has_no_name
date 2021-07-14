@@ -12,4 +12,5 @@ admin.site.register(ChatMember)
 admin.site.register(Post)
 admin.site.register(Blocked)
 admin.site.register(WatchedBy)
+admin.site.register(Reported)
 
