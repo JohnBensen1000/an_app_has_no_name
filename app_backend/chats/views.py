@@ -9,7 +9,7 @@ from django.apps import apps
 from django.views.decorators.csrf import csrf_exempt
 
 from google.cloud import firestore
-from google.cloud import storage, firestore
+from google.cloud import storage, firestore, vision
 
 db = firestore.Client()
 
@@ -21,6 +21,8 @@ Chat          = apps.get_model("models", "Chat")
 
 client = storage.Client(project=os.getenv("CLIENT"))
 bucket = client.get_bucket(os.getenv("BUCKET"))
+
+visionClient = vision.ImageAnnotatorClient()
 
 @csrf_exempt
 def chats(request, uid=None):
@@ -57,16 +59,19 @@ def chats(request, uid=None):
 def chat(request, uid=None, chatID=None):
     try:
         # Handles posting a new chat. A new chat could be a text or a post (image/video). If the new chat is
-        # a post, then saves the post in the appropriate location in google storage. Then creates a new document
-        # in google firestore (in the correct collection), documenting the sender and location of the post. If 
-        # the new chat is a text, then stores the chat and sender in a new document in google firestore (in the
-        # correct collection).
+        # a post, then checks if the post is NSFW. If it isn't, saves the post in the appropriate location in 
+        # google storage. Then creates a new document in google firestore (in the correct collection), 
+        # documenting the sender and location of the post. If the new chat is a text, then stores the chat and 
+        # sender in a new document in google firestore (in the correct collection).
         if request.method == "POST":
             newChatJson = json.loads(request.body)
 
             docRef = db.collection('CHATS').document(chatID).collection("chats").document()
 
             if newChatJson['isPost']:
+                if not check_if_post_is_safe(newChatJson['downloadURL']):
+                    return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
+
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -76,6 +81,8 @@ def chat(request, uid=None, chatID=None):
                         'isImage':     newChatJson['isImage']
                     }
                 })
+
+                return JsonResponse({"reasonForRejection": None}, status=201)
 
             else:
                 docRef.set({
@@ -150,3 +157,14 @@ def members(request, uid=None, chatID=None):
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
+
+def check_if_post_is_safe(downloadURL):
+	image                  = vision.Image()
+	image.source.image_uri = downloadURL
+	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
+
+	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
+		if safeAttribute.value >= 4:
+			return False
+
+	return True

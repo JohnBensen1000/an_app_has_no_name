@@ -187,12 +187,7 @@ class Post(models.Model):
 		on_delete=models.CASCADE, 
 		related_name="created"
 	)
-
-	# watchedBy = models.ManyToManyField(
-	# 	User,
-	# 	related_name="watched",
-	# )
-
+	
 	def save(self, *args, **kwargs):
 		if self.timeCreated == None:
 			self.timeCreated = datetime.datetime.now(tz=timezone.utc)

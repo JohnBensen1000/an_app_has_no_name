@@ -3,6 +3,7 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path('',                        userIdTaken,        name='userIdTaken'),
     path('preferences/',            preferences,        name="preferences"),
     path('new/',                    new_user,           name="new_user"),
     path('<slug:uid>/',             user,               name="user"),

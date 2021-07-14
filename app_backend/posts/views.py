@@ -11,7 +11,7 @@ from django.http import HttpResponse, JsonResponse
 from django.apps import apps
 from django.views.decorators.csrf import csrf_exempt
 
-from google.cloud import storage
+from google.cloud import storage, vision
 
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
@@ -22,6 +22,8 @@ Reported    = apps.get_model("models", "Reported")
 
 client = storage.Client(project=os.getenv("CLIENT"))
 bucket = client.get_bucket(os.getenv("BUCKET"))
+
+visionClient = vision.ImageAnnotatorClient()
 
 @csrf_exempt
 def watched_list(request, postID=None):
@@ -77,14 +79,19 @@ def posts(request, uid=None):
 					
 			return JsonResponse({"posts": userPostsList})
 
-		# Receives meta-data about a post and the post's image of video file. Creates a new post
-		# entity and uploads the post file to google storage in the right location and with the
-		# right file extension and content type. 
+		# Receives meta-data about a post and the post's image or video file. Uses google vision to
+		# determine if the post is NSFW or not. If it is, returns a Json object informing the client
+		# that the post has been rejected due to being NSFW. Otherwise, creates a new post entity and 
+		# uploads the post file to google storage in the right location and with the right file 
+		# extension and content type. 
 		if request.method == "POST":
 			postID      = str(int(100 * datetime.now().timestamp()))
 			newPostJson = json.loads(request.body)
 
-			newPost = Post.objects.create(
+			if not check_if_post_is_safe(newPostJson['downloadURL']):
+				return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
+
+			Post.objects.create(
 				postID      = postID,
 				preferences = Preferences.objects.create(),
 				creator     = user,
@@ -93,7 +100,7 @@ def posts(request, uid=None):
 				downloadURL = newPostJson["downloadURL"]
 			)
 
-			return HttpResponse(status=201)
+			return JsonResponse({"reasonForRejection": None}, status=201)
 
 	except:
 		print(" [ERROR]", sys.exc_info())
@@ -107,10 +114,14 @@ def profile(request, uid=None):
 			user = User.objects.get(uid=uid)
 			return JsonResponse(user.profile.to_dict())
 
-		# Allows a user to upload a new image/video as their profile. Saves the uploaded file
-		# in google storage and updates the user's profile entity.
+		# Allows a user to upload a new image/video as their profile. Uses google vision to check
+		# if the profile image/video is safe. If it is, then saves the picture/video in google storage
+		# and updates the user's profile entity. 
 		elif request.method == "POST":
 			profileJson = json.loads(request.body)
+
+			if not check_if_post_is_safe(profileJson['downloadURL']):
+				return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
 
 			user = User.objects.get(uid=uid)
 			user.profile.exists      = True
@@ -118,7 +129,7 @@ def profile(request, uid=None):
 			user.profile.downloadURL = profileJson['downloadURL']
 			user.profile.save()
 
-			return HttpResponse(status=201)
+			return JsonResponse({"reasonForRejection": None}, status=201)
 
 	except:
 		print(" [ERROR]", sys.exc_info())
@@ -187,3 +198,14 @@ def send_reported_content_email(post):
 				User: %s
 			""" % (os.getenv("ENVIRONMENT"), post.postID, post.downloadURL, post.creator.uid)
 		)
+
+def check_if_post_is_safe(downloadURL):
+	image                  = vision.Image()
+	image.source.image_uri = downloadURL
+	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
+
+	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
+		if safeAttribute.value >= 4:
+			return False
+
+	return True
