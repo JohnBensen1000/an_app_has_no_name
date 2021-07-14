@@ -17,6 +17,7 @@ User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
 Post        = apps.get_model("models", "Post")
+WatchedBy   = apps.get_model("models", "WatchedBy")
 
 client = storage.Client(project=os.getenv("CLIENT"))
 bucket = client.get_bucket(os.getenv("BUCKET"))
@@ -48,7 +49,7 @@ def watched_list(request, postID=None):
 			user.preferences.list = userPref
 			post.preferences.list = postPref
 
-			post.watchedBy.add(user)
+			WatchedBy.objects.create(user=user, post=post)
 
 			return HttpResponse(status=201)
 
