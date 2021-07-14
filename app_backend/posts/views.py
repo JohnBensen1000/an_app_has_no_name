@@ -148,7 +148,7 @@ def post(request, uid=None, postID=None):
 
 
 @csrf_exempt
-def reports(request, uid=None, postID=None):
+def reports(request, uid=None):
 	try:
 		# If the user reports an indivudal post, sends an email to the administrator
 		# with the post's details. The administrator can then decide whether to delete
@@ -156,7 +156,9 @@ def reports(request, uid=None, postID=None):
 		# reported the post and the post itself. 
 
 		if request.method == "POST":
-			post = Post.objects.get(postID=postID)
+			requestBody = json.loads(request.body)
+
+			post = Post.objects.get(postID=requestBody["postID"])
 			user = User.objects.get(uid=uid)
 
 			Reported.objects.create(user=user, post=post)

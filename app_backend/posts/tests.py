@@ -273,10 +273,16 @@ class ReportsTest(TestCase):
             downloadURL = "123.com"
         )
         self.client = Client()
-        self.url    = reverse('reports', kwargs={'uid': self.uid, 'postID': self.postID}) 
+        self.url    = reverse('reports', kwargs={'uid': self.uid}) 
 
     def test_post_report(self):
-        response1 = self.client.post(self.url, None)
+        response = self.client.post(
+            self.url,
+            json.dumps({
+                "postID": self.postID,
+            }),
+            content_type='application/json'
+        )
 
-        self.assertEqual(response1.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(Reported.objects.filter(user=self.user, post=self.post).exists(), True)

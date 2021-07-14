@@ -18,11 +18,10 @@ Blocked     = apps.get_model("models", "Blocked")
 def search(request, uid=None):
 	try:
 		# Recieves a string and returns a list of all users whose userID contains the string. If 
-		# no userID contain this string, returns an empty list. Does not return any creators that
-		# the user (given by uid) is currently blocking.
+		# no userID contain this string, returns an empty list. If uid is not a blanck string, then
+		# does not return any creators that the user (identified by uid) is currently blocking.
 		
 		if request.method == "GET":
-			user         = User.objects.get(uid=uid)
 			searchString = request.GET["contains"]
 
 			if searchString == '':
@@ -31,9 +30,15 @@ def search(request, uid=None):
 			objectList   = User.objects.filter(userID__icontains=searchString)
 			creatorsList = list()
 
-			for creator in objectList:
-				if not Blocked.objects.filter(user=user, creator=creator).exists() and creator.uid != user.uid:
-					creatorsList.append(creator.to_dict())
+			if uid != "":
+				user = User.objects.get(uid=uid)
+
+				for creator in objectList:
+					if not Blocked.objects.filter(user=user, creator=creator).exists() and creator.uid != user.uid:
+						creatorsList.append(creator.to_dict())
+
+			else:
+				creatorsList = [creator.to_dict() for creator in objectList]
 
 			if creatorsList == []:
 				return JsonResponse({"creatorsList": []})

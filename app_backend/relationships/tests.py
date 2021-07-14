@@ -417,6 +417,24 @@ class BlockedTest(TestCase):
             preferences = Preferences.objects.create(),
             profile     = Profile.objects.create(),
         )
+        self.user3 = User.objects.create(
+            userID   = 'laura',
+            email    = "jake1211@gmail.com",
+            phone    = "123212334245",
+            username = 'jakelessman',
+            uid      = '101010101',
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
+        self.user4 = User.objects.create(
+            userID   = 'collin',
+            email    = "jake112211@gmail.com",
+            phone    = "12312212334245",
+            username = 'jakelessman',
+            uid      = '12121321231',
+            preferences = Preferences.objects.create(),
+            profile     = Profile.objects.create(),
+        )
 
         self.client = Client()
         self.url   = reverse('blocked', kwargs={'uid': self.user1.uid})
@@ -432,6 +450,18 @@ class BlockedTest(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Blocked.objects.filter(user=self.user1, creator=self.user2).exists(), True)
+
+    def test_get_blocked_creators(self):
+        Blocked.objects.create(user=self.user1, creator=self.user2)
+        Blocked.objects.create(user=self.user1, creator=self.user4)
+
+        response         = self.client.get(self.url)
+        blockedUsersUids = [user["uid"] for user in json.loads(response.content)['blocked']]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.user2.uid in blockedUsersUids)
+        self.assertTrue(self.user4.uid in blockedUsersUids)
+        self.assertFalse(self.user3.uid in blockedUsersUids)
 
     def test_unblock_user(self):
         Blocked.objects.create(

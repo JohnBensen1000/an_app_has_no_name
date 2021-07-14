@@ -89,6 +89,13 @@ def followings(request, uid=None):
 @csrf_exempt
 def blocked(request, uid=None):
     try:
+        # Returns a list of all creators that the user is blocking.
+        if request.method == "GET":
+            user        = User.objects.get(uid=uid)
+            blockedList = [blocked.creator.to_dict() for blocked in Blocked.objects.filter(user=user)]
+
+            return JsonResponse({"blocked": blockedList})
+
         # Creates a blocked relationship between two users. Deletes the following relationship
         # and direct message between the two users if they exist.
         if request.method == "POST":
