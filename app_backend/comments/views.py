@@ -28,7 +28,7 @@ def comments(request, postID=None):
             requestJson = json.loads(request.body)
 
             if profanity.contains_profanity(requestJson["comment"]):
-                return JsonResponse({"reasonForDenial": "profanity"})
+                return JsonResponse({"reasonForDenial": "profanity"}, status=200)
 
             path          = requestJson["path"] + "/c/" + str(int(datetime.datetime.now().timestamp()))
             commentDocRef = db.document('COMMENTS' + "/%d" % postID + path)

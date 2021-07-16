@@ -1,8 +1,10 @@
 import sys
 import json
-import random
-import datetime
 import os
+import ssl
+import smtplib
+
+from better_profanity import profanity
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
@@ -61,8 +63,9 @@ def chat(request, uid=None, chatID=None):
         # Handles posting a new chat. A new chat could be a text or a post (image/video). If the new chat is
         # a post, then checks if the post is NSFW. If it isn't, saves the post in the appropriate location in 
         # google storage. Then creates a new document in google firestore (in the correct collection), 
-        # documenting the sender and location of the post. If the new chat is a text, then stores the chat and 
-        # sender in a new document in google firestore (in the correct collection).
+        # documenting the sender and location of the post. If the new chat is a text, then checks if it contains
+        # profanity. If it doesn't, then stores the chat and sender in a new document in google firestore (in 
+        # the correct collection).
         if request.method == "POST":
             newChatJson = json.loads(request.body)
 
@@ -85,6 +88,9 @@ def chat(request, uid=None, chatID=None):
                 return JsonResponse({"reasonForRejection": None}, status=201)
 
             else:
+                if profanity.contains_profanity(newChatJson['text']):
+                    return JsonResponse({"reasonForRejection": "profanity"}, status=200)
+                    
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -92,7 +98,7 @@ def chat(request, uid=None, chatID=None):
                     'text':   newChatJson['text']
                 })
 
-            return HttpResponse(status=201)
+            return JsonResponse({"reasonForRejection": None}, status=201)
             
         # Allows a user to leave a chat. If the chat is a direct message, then deletes the chat. Otherwise,
         # deletes the ChatMember entity that shows that a user is in a chat.  
@@ -114,6 +120,40 @@ def chat(request, uid=None, chatID=None):
 
             return HttpResponse(status=200)
             
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)
+
+@csrf_exempt
+def report(request, uid=None, chatID=None):
+    try:
+        # When a user reports a chat item, sends an email to the development account with the
+        # json object containing the chat item, the chat ID, and the uid of the user who reported 
+        # the chat item. 
+        if request.method == "POST":
+            chat        = Chat.objects.get(chatID=chatID)
+            user        = User.objects.get(uid=uid)
+            requestBody = json.loads(request.body)
+
+            port    = 465 
+            context = ssl.create_default_context()
+
+            with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+                server.login("entropy.developer1@gmail.com", "CominG1$is@Winter6*9sNow11")
+                server.sendmail(
+                    "entropy.developer1@gmail.com", 
+                    "entropy.developer1@gmail.com", 
+                    """
+                        %s
+
+                        Chat item: %s
+                        Chat: %s
+                        Reporting user uid: %s
+                    """ % (os.getenv("ENVIRONMENT"), json.dumps(requestBody["chatItem"]), chat.chatID, user.uid)
+                )
+
+            return HttpResponse(status=200)
+
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
@@ -168,3 +208,5 @@ def check_if_post_is_safe(downloadURL):
 			return False
 
 	return True
+
+
