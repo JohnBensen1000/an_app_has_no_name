@@ -66,6 +66,7 @@ def chat(request, uid=None, chatID=None):
         # documenting the sender and location of the post. If the new chat is a text, then checks if it contains
         # profanity. If it doesn't, then stores the chat and sender in a new document in google firestore (in 
         # the correct collection).
+        
         if request.method == "POST":
             newChatJson = json.loads(request.body)
 

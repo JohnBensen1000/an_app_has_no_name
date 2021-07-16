@@ -181,6 +181,39 @@ def reports(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
+def reports_profile(request, uid=None):
+	try:
+		if request.method == "POST":
+			user         = User.objects.get(uid=uid)
+			requestBody  = json.loads(request.body)
+			reportedUser = User.objects.get(uid=requestBody["reportedUser"])
+			profile      = reportedUser.profile
+
+			port    = 465 
+			context = ssl.create_default_context()
+
+			with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+				server.login("entropy.developer1@gmail.com", "CominG1$is@Winter6*9sNow11")
+				server.sendmail(
+					"entropy.developer1@gmail.com", 
+					"entropy.developer1@gmail.com", 
+					"""
+						%s
+
+						Reported user id: %s
+						Download URL: %s
+						Reporting user id: %s
+					""" % (os.getenv("ENVIRONMENT"), reportedUser.uid, profile.downloadURL, user.uid)
+				)
+
+				return HttpResponse(status=200)
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+
+
 def send_reported_content_email(post):
 	port    = 465 
 	context = ssl.create_default_context()
