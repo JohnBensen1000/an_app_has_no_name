@@ -1,3 +1,5 @@
+import sys
+
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
@@ -8,11 +10,10 @@ from django.http import HttpResponse, JsonResponse
 def access(request):
     try:
         if request.method == "GET":
-            accessToken = request.GET['accessToken']
-            if accessToken == "aCCESS_tOKEN1010zaq7710_1122":
-                return HttpResponse(status=200)
+            if request.GET['accessCode'] == "access-token12":
+                return JsonResponse({'accessGranted': True})
             else:
-                return HttpResponse(status=400)
+                return JsonResponse({'accessGranted': False})
 
     except:
         print(" [ERROR]", sys.exc_info())
