@@ -75,6 +75,8 @@ def new_user(request):
 		# see if any unique fields (userID, email, and phone) have been taken by another user. If any of these
 		# fields have been taken, returns a list of the taken fields. If not, then creates a new User entity. 
 		if request.method == "POST":
+			return HttpResponse(status=500)
+			
 			newUser = json.loads(request.body)
 
 			fieldsTaken = list()
