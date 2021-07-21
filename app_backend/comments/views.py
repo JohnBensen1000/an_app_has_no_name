@@ -63,15 +63,16 @@ def comments(request, postID=None):
 def get_all_comments(user, collection, level):
     # Comments are stored such that each response comment is stored in a collection 
     # that is under the parent comment. Therefore, this function recursively gets
-    # to every comment and creates a list of all comments.
+    # to every comment and creates a list of all comments. Does not return comments
+    # from users who deleted their accounts or who the current user is currently blocking.
 
     allComments = []
 
     for commentDoc in collection.order_by('datePosted').stream():
         commentDict = commentDoc.to_dict()
-        creator     = User.objects.get(uid=commentDict["uid"])
+        creator     = User.objects.filter(uid=commentDict["uid"]).first()
 
-        if not Blocked.objects.filter(user=user, creator=creator).exists():
+        if creator is not None and not Blocked.objects.filter(user=user, creator=creator).exists():
             commentDict["level"] = level
             del commentDict["datePosted"]
 

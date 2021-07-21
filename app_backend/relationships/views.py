@@ -167,8 +167,9 @@ def following(request, uid0=None, uid1=None):
             return JsonResponse({"isFollowing": isFollowing})
 
         # Allows a user to follow back or not follow back a new follower. Either way, the user's new
-        # follower will no longer be labeled as a new follower. Returns a 201 status code if the user
-        # decides to follow back, returns 200 otherwise. 
+        # follower will no longer be labeled as a new follower. Checks to see if the following relationship
+        # doesn't already exist before creating a new one. Returns a 201 status code if the user decides 
+        # to follow back, returns 200 otherwise. 
         if request.method == "POST":
             following             = Following.objects.get(follower=follower, creator=creator)
             following.newFollower = False
@@ -176,7 +177,7 @@ def following(request, uid0=None, uid1=None):
 
             requestBody = json.loads(request.body)
 
-            if requestBody['followBack']:
+            if requestBody['followBack'] and not Following.objects.filter(follower=creator, creator=follower).exists():
                 Following.objects.create(
                     follower    = creator,
                     creator     = follower,

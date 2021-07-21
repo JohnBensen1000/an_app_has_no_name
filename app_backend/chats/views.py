@@ -186,14 +186,14 @@ def members(request, uid=None, chatID=None):
             )
             return HttpResponse(status=201)
 
-        # Allows a user to remove a user from a chat. 
-        if request.method == "DELETE":
-            requestJson = json.loads(request.body)
-            chatMember  = User.objects.get(uid=requestJson['uid'])
+        # # Allows a user to remove a user from a chat. 
+        # if request.method == "DELETE":
+        #     requestJson = json.loads(request.body)
+        #     chatMember  = User.objects.get(uid=requestJson['uid'])
 
-            ChatMember.objects.get(member=chatMember, chat=chat).delete()
+        #     ChatMember.objects.get(member=chatMember, chat=chat).delete()
 
-            return HttpResponse(status=200)
+        #     return HttpResponse(status=200)
 
     except:
         print(" [ERROR]", sys.exc_info())
