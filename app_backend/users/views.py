@@ -94,7 +94,6 @@ def new_user(request):
 				user = User.objects.create(
 					userID      = newUser["userID"],
 					email       = newUser['email'],
-					# phone       = newUser['phone'],
 					uid         = newUser["uid"],
 					username    = newUser["username"],
 					preferences = Preferences.objects.create(),

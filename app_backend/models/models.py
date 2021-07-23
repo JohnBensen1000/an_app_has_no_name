@@ -79,11 +79,11 @@ class User(models.Model):
 	phone  = models.CharField(max_length=15, default="") 
 	uid    = models.CharField(max_length=50, unique=True) 
 	
-	deviceToken = models.TextField(default="")
+	deviceToken = models.TextField(default=None, null=True, blank=True)
 
 	username          = models.CharField(max_length=20, default="")
 	preferredLanguage = models.CharField(max_length=20, default="")
-	profileColor      = models.CharField(max_length=10, default='blue')
+	profileColor      = models.CharField(max_length=10, default='1')
 	signedIn          = models.BooleanField(default=False)
 
 	preferences = models.OneToOneField(
@@ -136,11 +136,13 @@ class Chat(models.Model):
 	'''
 		Contains information about an individual chat. The value stored in chatID is the location of
 		the chat collection in Firestore. The save method generates a random chatID whenever the Chat
-		entity is being created (self.pk is assigned when the Chat entity is finally created).
+		entity is being created (self.pk is assigned when the Chat entity is finally created). If self.pk
+		is already defined, than the save() method updates the field 'lastChatTime' to the current time.
 	'''
 	chatID          = models.CharField(max_length=50, unique=True)
 	chatName        = models.CharField(max_length=50, default="")
 	isDirectMessage = models.BooleanField(default=False)
+	lastChatTime    = models.DateTimeField(default=datetime.datetime.now(tz=timezone.utc))
 
 	def save(self, *args, **kwargs):
 		if self.pk is None:
@@ -148,6 +150,8 @@ class Chat(models.Model):
 			db.collection('CHATS').document(self.chatID).set({
 				'chatID': self.chatID
 			})
+		else:
+			self.lastChatTime = datetime.datetime.now(tz=timezone.utc)
 		
 		super(Chat, self).save(*args, **kwargs)
 
@@ -156,6 +160,7 @@ class Chat(models.Model):
 			'chatID':          self.chatID,
 			'chatname':        self.chatName,
 			'isDirectMessage': self.isDirectMessage,
+			'lastChatTime':    self.lastChatTime,
 			'members':         [chatMember.member.to_dict() for chatMember in ChatMember.objects.filter(chat=self)]
 		}
 

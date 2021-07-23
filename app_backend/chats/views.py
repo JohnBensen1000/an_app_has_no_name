@@ -31,16 +31,19 @@ def chats(request, uid=None):
     try:
         user = User.objects.get(uid=uid)
 
-        # Returns a list of the chatIDs of each chat that a user is part of. 
+        # Returns a list of the chatIDs of each chat that a user is part of. Sorts by the how
+        # recent the last chat item was sent in a chat. 
         if request.method == "GET":
-            chatList = list()
-            for chatMember in ChatMember.objects.filter(member=user):
-                chatList.append(chatMember.chat.to_dict())
+            chatIdList = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=user)]
+            chatList   = list()
+
+            for chat in Chat.objects.filter(chatID__in=chatIdList).order_by("-lastChatTime"):
+                chatList.append(chat.to_dict())
 
             return JsonResponse({"chats": chatList})
 
-        # Allows a user to create a new chat. The user who creates the chat automatically set
-        # as a member of the chat. 
+        # Allows a user to create a new chat. The user who creates the chat automatically 
+        # set as a member of the chat. 
         if request.method == "POST":
             chat = Chat.objects.create(
                 chatName=json.loads(request.body)['chatName']
@@ -65,7 +68,7 @@ def chat(request, uid=None, chatID=None):
         # google storage. Then creates a new document in google firestore (in the correct collection), 
         # documenting the sender and location of the post. If the new chat is a text, then checks if it contains
         # profanity. If it doesn't, then stores the chat and sender in a new document in google firestore (in 
-        # the correct collection).
+        # the correct collection). Saves the chat object, forcing it to update it's field "lastChatTime".
         
         if request.method == "POST":
             newChatJson = json.loads(request.body)
@@ -98,6 +101,8 @@ def chat(request, uid=None, chatID=None):
                     'isPost': False,
                     'text':   newChatJson['text']
                 })
+
+            Chat.objects.get(chatID=chatID).save()
 
             return JsonResponse({"reasonForRejection": None}, status=201)
             

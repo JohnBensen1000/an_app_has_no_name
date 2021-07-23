@@ -23,14 +23,14 @@ def signedInStatus(request, uid=None):
 			if requestBody['signIn'] == True:
 				for tempUser in User.objects.filter(deviceToken=requestBody["deviceToken"]):
 					tempUser.signedIn    = False
-					tempUser.deviceToken = ""
+					tempUser.deviceToken = None
 					tempUser.save()
 					
 				user.deviceToken = requestBody["deviceToken"] 
 				user.signedIn    = True
 
 			else:
-				user.deviceToken = ""
+				user.deviceToken = None
 				user.signedIn    = False
 
 			user.save()
