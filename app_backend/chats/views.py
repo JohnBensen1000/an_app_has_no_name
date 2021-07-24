@@ -3,6 +3,7 @@ import json
 import os
 import ssl
 import smtplib
+import requests
 
 from better_profanity import profanity
 
@@ -12,6 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from google.cloud import firestore
 from google.cloud import storage, firestore, vision
+
+serverToken = 'AAAALGfgH5A:APA91bH1FgqgJOZ4LQds7XgnRxatrIxZgP9hzvx8MItG8fsgxDGAgR9XocFWh8qwNfCxBaj-eddA5DwS2r2SNRbNU2iOIJvu-QaXo_2aPf-DujhqdMhz9H3aW5ZItBfXuV0JZ5BGQXDV'
 
 db = firestore.Client()
 
@@ -42,20 +45,6 @@ def chats(request, uid=None):
 
             return JsonResponse({"chats": chatList})
 
-        # Allows a user to create a new chat. The user who creates the chat automatically 
-        # set as a member of the chat. 
-        if request.method == "POST":
-            chat = Chat.objects.create(
-                chatName=json.loads(request.body)['chatName']
-            )
-            ChatMember.objects.create(
-                member  = user,
-                chat    = chat,
-                isOwner = True,
-            )
-
-            return HttpResponse(status=201)
-
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
@@ -78,7 +67,6 @@ def chat(request, uid=None, chatID=None):
             if newChatJson['isPost']:
                 if not check_if_post_is_safe(newChatJson['downloadURL']):
                     return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
-
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -88,13 +76,9 @@ def chat(request, uid=None, chatID=None):
                         'isImage':     newChatJson['isImage']
                     }
                 })
-
-                return JsonResponse({"reasonForRejection": None}, status=201)
-
             else:
                 if profanity.contains_profanity(newChatJson['text']):
                     return JsonResponse({"reasonForRejection": "profanity"}, status=200)
-                    
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -102,30 +86,31 @@ def chat(request, uid=None, chatID=None):
                     'text':   newChatJson['text']
                 })
 
-            Chat.objects.get(chatID=chatID).save()
+            chat = Chat.objects.get(chatID=chatID)
+            chat.save()
 
+            for chatMember in ChatMember.objects.filter(chat=chat).exclude(member__uid=uid):
+                chatMember.isUpdated = False
+                chatMember.save()
+                
             return JsonResponse({"reasonForRejection": None}, status=201)
             
-        # Allows a user to leave a chat. If the chat is a direct message, then deletes the chat. Otherwise,
-        # deletes the ChatMember entity that shows that a user is in a chat.  
-        if request.method == "DELETE":
-            chat = Chat.objects.get(chatID=chatID)
-            user = User.objects.get(uid=uid)
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)
 
-            if chat.isDirectMessage:
-                docRef = db.collection('CHATS').document(chatID)
-                colRef = docRef.collection("chats")
-                for doc in colRef.stream():
-                    doc.reference.delete()
-
-                docRef.delete()
-                chat.delete()
-
-            else:
-                ChatMember.objects.get(member=user, chat=chat).delete()
+@csrf_exempt
+def updated(request, uid=None, chatID=None):
+    try:
+        # This view exists to let a client tell the database that they have read all the most recent
+        # chat items in a particular chat. 
+        if request.method == "POST":
+            chatMember = ChatMember.objects.filter(chat__chatID=chatID).filter(member__uid=uid).first()
+            chatMember.isUpdated = True
+            chatMember.save()
 
             return HttpResponse(status=200)
-            
+
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
@@ -179,27 +164,6 @@ def members(request, uid=None, chatID=None):
                 'membersList': membersList
             })
 
-        # Allows a user to add a member to a chat.
-        if request.method == "POST":
-            requestJson = json.loads(request.body)
-            newMember   = User.objects.get(uid=requestJson['uid'])
-
-            ChatMember.objects.create(
-                chat    = chat,
-                isOwner = False,
-                member  = newMember
-            )
-            return HttpResponse(status=201)
-
-        # # Allows a user to remove a user from a chat. 
-        # if request.method == "DELETE":
-        #     requestJson = json.loads(request.body)
-        #     chatMember  = User.objects.get(uid=requestJson['uid'])
-
-        #     ChatMember.objects.get(member=chatMember, chat=chat).delete()
-
-        #     return HttpResponse(status=200)
-
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
@@ -210,9 +174,27 @@ def check_if_post_is_safe(downloadURL):
 	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
 
 	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
-		if safeAttribute.value >= 4:
+		if safeAttribute.value >= 5:
 			return False
 
 	return True
+
+def send_firebase_message(user):
+    if user.deviceToken is None:
+        return
+
+    headers = { 'Content-Type': 'application/json', 'Authorization': 'key=' + serverToken }
+    body = {
+        'to': user.deviceToken,
+        'data': 'testing',
+    }
+
+    response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
+    print(response.status_code)
+    
+
+    
+
+    
 
 

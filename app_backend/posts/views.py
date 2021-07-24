@@ -238,7 +238,7 @@ def check_if_post_is_safe(downloadURL):
 	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
 
 	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
-		if safeAttribute.value >= 4:
+		if safeAttribute.value >= 5:
 			return False
 
 	return True

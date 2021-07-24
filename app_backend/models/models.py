@@ -142,7 +142,7 @@ class Chat(models.Model):
 	chatID          = models.CharField(max_length=50, unique=True)
 	chatName        = models.CharField(max_length=50, default="")
 	isDirectMessage = models.BooleanField(default=False)
-	lastChatTime    = models.DateTimeField(default=datetime.datetime.now(tz=timezone.utc))
+	lastChatTime    = models.DateTimeField()
 
 	def save(self, *args, **kwargs):
 		if self.pk is None:
@@ -150,8 +150,7 @@ class Chat(models.Model):
 			db.collection('CHATS').document(self.chatID).set({
 				'chatID': self.chatID
 			})
-		else:
-			self.lastChatTime = datetime.datetime.now(tz=timezone.utc)
+		self.lastChatTime = datetime.datetime.now(tz=timezone.utc)
 		
 		super(Chat, self).save(*args, **kwargs)
 
@@ -160,18 +159,19 @@ class Chat(models.Model):
 			'chatID':          self.chatID,
 			'chatname':        self.chatName,
 			'isDirectMessage': self.isDirectMessage,
-			'lastChatTime':    self.lastChatTime,
 			'members':         [chatMember.member.to_dict() for chatMember in ChatMember.objects.filter(chat=self)]
 		}
 
 class ChatMember(models.Model):
 	'''
 		Stores the many-to-many relationship between users and chats. The boolean field, isOwner, is set
-		to true if the member is the owner of the chat. 
+		to true if the member is the owner of the chat. The boolean field, isUpdated, is set to true if 
+		chat member has seen all the chat items sent in a chat; false otherwise. 
 	'''
-	member  = models.ForeignKey(User, on_delete=models.CASCADE)
-	chat    = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_members')
-	isOwner = models.BooleanField(default=False)
+	member    = models.ForeignKey(User, on_delete=models.CASCADE)
+	chat      = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_members')
+	isOwner   = models.BooleanField(default=False)
+	isUpdated = models.BooleanField(default=True)
 
 class Post(models.Model):
 	'''
