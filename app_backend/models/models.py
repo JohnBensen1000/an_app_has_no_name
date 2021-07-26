@@ -58,13 +58,21 @@ class Profile(models.Model):
 	exists      = models.BooleanField(default=False)
 	isImage     = models.BooleanField(default=True)
 	downloadURL = models.TextField(default="")
+	isFlagged   = models.BooleanField(default=False)
 
 	def to_dict(self):
-		return {
-			'exists':      self.exists,
-			'isImage':     self.isImage,
-			'downloadURL': self.downloadURL,
-		}
+		if self.isFlagged:
+			return {
+				'exists':      False,
+				'isImage':     self.isImage,
+				'downloadURL': "",
+			}
+		else:
+			return {
+				'exists':      self.exists,
+				'isImage':     self.isImage,
+				'downloadURL': self.downloadURL,
+			}
 
 class User(models.Model):
 	'''
@@ -179,11 +187,11 @@ class Post(models.Model):
 		the users that have watched this Post in their recommendations or following feeds. 
 	'''
 	postID      = models.CharField(max_length=100, primary_key=True)
-	isPrivate   = models.BooleanField(default=False)
-	isImage     = models.BooleanField()
 	timeCreated = models.DateTimeField() 
 	downloadURL = models.TextField()
-	numReports  = models.IntegerField(default=0)
+	isPrivate   = models.BooleanField(default=False)
+	isImage     = models.BooleanField()
+	isFlagged   = models.BooleanField(default=False)
 
 	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 

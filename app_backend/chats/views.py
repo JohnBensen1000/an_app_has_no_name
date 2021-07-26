@@ -69,8 +69,6 @@ def chat(request, uid=None, chatID=None):
             docRef = db.collection('CHATS').document(chatID).collection("chats").document()
 
             if newChatJson['isPost']:
-                if not check_if_post_is_safe(newChatJson['downloadURL']):
-                    return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -81,8 +79,6 @@ def chat(request, uid=None, chatID=None):
                     }
                 })
             else:
-                if profanity.contains_profanity(newChatJson['text']):
-                    return JsonResponse({"reasonForRejection": "profanity"}, status=200)
                 docRef.set({
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,
@@ -176,30 +172,7 @@ def members(request, uid=None, chatID=None):
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)
 
-def check_if_post_is_safe(downloadURL):
-	image                  = vision.Image()
-	image.source.image_uri = downloadURL
-	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
 
-	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
-		if safeAttribute.value >= 5:
-			return False
-
-	return True
-
-def send_firebase_message(user):
-    if user.deviceToken is None:
-        return
-
-    headers = { 'Content-Type': 'application/json', 'Authorization': 'key=' + serverToken }
-    body = {
-        'to': user.deviceToken,
-        'data': 'testing',
-    }
-
-    response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
-    print(response.status_code)
-    
 
 
 

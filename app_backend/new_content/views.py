@@ -120,9 +120,10 @@ def recommendations(request, uid=None):
 			reportedList = [reported.post.postID  for reported in Reported.objects.filter(user=user)      ]
 
 			creatorsList.extend([blocked.creator for blocked in Blocked.objects.filter(user=user)])
-		 
-			notWatchedPosts = Post.objects.exclude(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
-			watchedPosts    = Post.objects.filter(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
+		
+			postQuerySet    = Post.objects.exclude(isFlagged=True).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
+			notWatchedPosts = postQuerySet.exclude(postID__in=watchedList)
+			watchedPosts    = postQuerySet.filter(postID__in=watchedList)
 
 			for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
 				postPref = np.array(post.preferences.list)
@@ -155,8 +156,9 @@ def following(request, uid=None):
 
 			postsList = list()
 
-			notWatchedPosts = Post.objects.filter(creator__in=followings).exclude(postID__in=watchedList)
-			watchedPosts    = Post.objects.filter(creator__in=followings, postID__in=watchedList)
+			postQuerySet    = Post.objects.filter(creator__in=followings).exclude(isFlagged=True)
+			notWatchedPosts = postQuerySet.exclude(postID__in=watchedList)
+			watchedPosts    = postQuerySet.filter(postID__in=watchedList)
 
 			for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
 				postsList.append(post.to_dict()) 

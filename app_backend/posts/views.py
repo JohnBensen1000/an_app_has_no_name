@@ -70,12 +70,12 @@ def posts(request, uid=None):
 	try:
 		user = User.objects.get(uid=uid)
 
-		# Returns a list of all of a user's posts. TODO: only return private post if user is friends
-		# with the creator. 
+		# Returns a list of all of a user's posts. Only returns posts that aren't flagged. 
 		if request.method == "GET":
 			userPostsList = []
 			for post in user.created.all().order_by('-timeCreated'):
-				userPostsList.append(post.to_dict())	
+				if not post.isFlagged:
+					userPostsList.append(post.to_dict())	
 					
 			return JsonResponse({"posts": userPostsList})
 
@@ -85,13 +85,11 @@ def posts(request, uid=None):
 		# uploads the post file to google storage in the right location and with the right file 
 		# extension and content type. 
 		if request.method == "POST":
-			postID      = str(int(100 * datetime.now().timestamp()))
-			newPostJson = json.loads(request.body)
+			postID             = str(int(100 * datetime.now().timestamp()))
+			newPostJson        = json.loads(request.body)
+			reasonForRejection = None
 
-			if not check_if_post_is_safe(newPostJson['downloadURL']):
-				return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
-
-			Post.objects.create(
+			post = Post.objects.create(
 				postID      = postID,
 				preferences = Preferences.objects.create(),
 				creator     = user,
@@ -100,7 +98,14 @@ def posts(request, uid=None):
 				downloadURL = newPostJson["downloadURL"]
 			)
 
-			return JsonResponse({"reasonForRejection": None}, status=201)
+			if not check_if_post_is_safe(newPostJson['downloadURL']):
+				post.isFlagged = True
+				post.save()
+				
+				reasonForRejection = "NSFW"
+				send_reported_content_email(post)
+
+			return JsonResponse({"reasonForRejection": reasonForRejection}, status=201)
 
 	except:
 		print(" [ERROR]", sys.exc_info())
@@ -118,10 +123,8 @@ def profile(request, uid=None):
 		# if the profile image/video is safe. If it is, then saves the picture/video in google storage
 		# and updates the user's profile entity. 
 		elif request.method == "POST":
-			profileJson = json.loads(request.body)
-
-			if not check_if_post_is_safe(profileJson['downloadURL']):
-				return JsonResponse({"reasonForRejection": "NSFW"}, status=200)
+			profileJson        = json.loads(request.body)
+			reasonForRejection = None
 
 			user = User.objects.get(uid=uid)
 			user.profile.exists      = True
@@ -129,7 +132,29 @@ def profile(request, uid=None):
 			user.profile.downloadURL = profileJson['downloadURL']
 			user.profile.save()
 
-			return JsonResponse({"reasonForRejection": None}, status=201)
+			if not check_if_post_is_safe(profileJson['downloadURL']):
+				user.profile.isFlagged = True
+				user.profile.save()
+
+				reasonForRejection = "NSFW"
+
+				port    = 465 
+				context = ssl.create_default_context()
+				with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+					server.login("entropy.developer1@gmail.com", "CominG1$is@Winter6*9sNow11")
+					server.sendmail(
+						"entropy.developer1@gmail.com", 
+						"entropy.developer1@gmail.com", 
+						"""
+							%s
+
+							Reported user id: %s
+							profile pk: %s
+							Download URL: %s
+						""" % (os.getenv("ENVIRONMENT"), user.uid, user.profile.pk, user.profile.downloadURL)
+					)
+
+			return JsonResponse({"reasonForRejection": reasonForRejection}, status=201)
 
 	except:
 		print(" [ERROR]", sys.exc_info())
@@ -237,7 +262,7 @@ def check_if_post_is_safe(downloadURL):
 	image.source.image_uri = downloadURL
 	safe                   = visionClient.safe_search_detection(image=image).safe_search_annotation
 
-	for safeAttribute in [safe.adult, safe.medical, safe.spoof, safe.violence, safe.racy]:
+	for safeAttribute in [safe.adult, safe.medical, safe.violence]:
 		if safeAttribute.value >= 5:
 			return False
 
