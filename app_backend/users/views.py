@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
@@ -12,7 +13,13 @@ default_app = firebase_admin.initialize_app()
 User        = apps.get_model("models", "User")
 Preferences = apps.get_model("models", "Preferences")
 Profile     = apps.get_model("models", "Profile")
+Post        = apps.get_model("models", "Post")
+Following   = apps.get_model("models", "Following")
+WatchedBy   = apps.get_model("models", "WatchedBy")
 Blocked     = apps.get_model("models", "Blocked")
+Reported    = apps.get_model("models", "Reported")
+Chat        = apps.get_model("models", "Chat")
+ChatMember  = apps.get_model("models", "ChatMember")
 
 @csrf_exempt
 def userIdTaken(request):
@@ -130,7 +137,13 @@ def user(request, uid=None):
 		# When deleting a user account, the Preference and Profile models that are associated with
 		# it have to also be deleted. the method, delete_account(), takes care of that. 
 		if request.method == "DELETE":
-			firebase_admin.auth.delete_user(user.uid)
+			for chatMember in ChatMember.objects.filter(member=user):
+				if chatMember.chat.isDirectMessage:
+					chatMember.chat.delete()
+				chatMember.delete()
+
+			if os.getenv("ENVIRONMENT") == "PRODUCTION":
+				firebase_admin.auth.delete_user(user.uid)
 			user.delete_account()
 			return HttpResponse(status=200)
 			

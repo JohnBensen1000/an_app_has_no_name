@@ -14,7 +14,9 @@ from django.views.decorators.csrf import csrf_exempt
 from google.cloud import firestore
 from google.cloud import storage, firestore, vision
 
-serverToken = 'AAAALGfgH5A:APA91bH1FgqgJOZ4LQds7XgnRxatrIxZgP9hzvx8MItG8fsgxDGAgR9XocFWh8qwNfCxBaj-eddA5DwS2r2SNRbNU2iOIJvu-QaXo_2aPf-DujhqdMhz9H3aW5ZItBfXuV0JZ5BGQXDV'
+from firebase_admin import messaging
+
+serverToken = 'AAAAsEEDk0k:APA91bF1sOQc-E_MFIW9IEDjpELLj3euKlPzAGBfwARrKgX199yD8VrDyx6q5omEkxlzIuK_fU6jb-rAsiRTimhaFtpfq_mXzSZ322PsiMZ65GxFWoIT2lk3ZhwZzJ_Q-MI-E_jMAZo1'
 
 db = firestore.Client()
 
@@ -32,16 +34,18 @@ visionClient = vision.ImageAnnotatorClient()
 @csrf_exempt
 def chats(request, uid=None):
     try:
-        user = User.objects.get(uid=uid)
-
         # Returns a list of the chatIDs of each chat that a user is part of. Sorts by the how
         # recent the last chat item was sent in a chat. 
         if request.method == "GET":
-            chatIdList = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=user)]
+            chatIdList = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member__uid=uid)]
             chatList   = list()
 
             for chat in Chat.objects.filter(chatID__in=chatIdList).order_by("-lastChatTime"):
-                chatList.append(chat.to_dict())
+                chatMember            = ChatMember.objects.filter(member__uid=uid).filter(chat__chatID=chat.chatID).first()
+                chatDict              = chat.to_dict()
+                chatDict['isUpdated'] = chatMember.isUpdated
+
+                chatList.append(chatDict)
 
             return JsonResponse({"chats": chatList})
 
@@ -92,7 +96,11 @@ def chat(request, uid=None, chatID=None):
             for chatMember in ChatMember.objects.filter(chat=chat).exclude(member__uid=uid):
                 chatMember.isUpdated = False
                 chatMember.save()
-                
+
+                if chatMember.member.deviceToken is not None:
+                    message = messaging.Message(data={'chatID': chatID}, token=chatMember.member.deviceToken)
+                    messaging.send(message)
+            
             return JsonResponse({"reasonForRejection": None}, status=201)
             
     except:
@@ -192,6 +200,8 @@ def send_firebase_message(user):
     response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
     print(response.status_code)
     
+
+
 
     
 
