@@ -200,38 +200,38 @@ class UserTests(BaseTest):
         self.assertEqual(ChatMember.objects.count(), 0)
         self.assertEqual(ChatMember.objects.filter(member=user2).count(), 0)
 
-    def test_get_user_preferences(self):
-        '''
-            Gets the list of the user's preferences.
-        '''
-        user         = self.create_user_object('test', 'test')
-        url          = reverse('user_preferences', kwargs={'uid': user.uid})
-        response     = self.client.get(url)
+    # def test_get_user_preferences(self):
+    #     '''
+    #         Gets the list of the user's preferences.
+    #     '''
+    #     user         = self.create_user_object('test', 'test')
+    #     url          = reverse('user_preferences', kwargs={'uid': user.uid})
+    #     response     = self.client.get(url)
 
-        self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.status_code, 200)
 
-    def test_update_user_preferences(self):
-        '''
-            Gets the list of the user's preferences.
-        '''
-        user     = self.create_user_object('test', 'test')
-        url      = reverse('user_preferences', kwargs={'uid': user.uid})
-        response = self.client.put(
-            url,
-            json.dumps({
-                'preferences': ['music', 'fitness', 'art']
-            }),
-            content_type='application/json'
-        )
+    # def test_update_user_preferences(self):
+    #     '''
+    #         Gets the list of the user's preferences.
+    #     '''
+    #     user     = self.create_user_object('test', 'test')
+    #     url      = reverse('user_preferences', kwargs={'uid': user.uid})
+    #     response = self.client.put(
+    #         url,
+    #         json.dumps({
+    #             'preferences': ['music', 'fitness', 'art']
+    #         }),
+    #         content_type='application/json'
+    #     )
 
-        user = User.objects.get(uid=user.uid)
+    #     user = User.objects.get(uid=user.uid)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(user.preferences.music, .9)
-        self.assertEqual(user.preferences.fitness, .9)
-        self.assertEqual(user.preferences.art, .9)
-        self.assertEqual(user.preferences.food, .1)
-        self.assertEqual(user.preferences.comedy, .1)
-        self.assertEqual(user.preferences.dance, .1)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(user.preferences.music, .9)
+    #     self.assertEqual(user.preferences.fitness, .9)
+    #     self.assertEqual(user.preferences.art, .9)
+    #     self.assertEqual(user.preferences.food, .1)
+    #     self.assertEqual(user.preferences.comedy, .1)
+    #     self.assertEqual(user.preferences.dance, .1)
 
 

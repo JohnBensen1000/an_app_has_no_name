@@ -39,7 +39,7 @@ def report_post(request, uid=None):
 			send_email.send_email({
                 "postID": post.postID,
                 "download url": post.downloadURL,
-                'user': post.creator.to_dict()
+                'user': str(post.creator.to_dict())
             })
 
 			return JsonResponse({'post': post.postID, 'uid': user.uid})

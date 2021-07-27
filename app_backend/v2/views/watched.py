@@ -41,8 +41,8 @@ def watched(request, postID=None):
             postPref = np.array(post.preferences.list)
             
             stepSize  = .01
-            userPref += stepSize * watchedJson['userRating'] * postPref
-            postPref += stepSize * watchedJson['userRating'] * userPref
+            userPref += stepSize * watchedJson['rating'] * postPref
+            postPref += stepSize * watchedJson['rating'] * userPref
 
             for i, pref in enumerate(userPref):
                 if pref < 0.0: userPref[i] = 0

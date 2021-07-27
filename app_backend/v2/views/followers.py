@@ -49,7 +49,7 @@ def new_followers(request, uid=None):
             for relationship in Following.objects.filter(creator=user, newFollower=True):
                 followerList.append(relationship.follower.to_dict())
 
-            return JsonResponse({'followerList': followerList})
+            return JsonResponse({'followers': followerList})
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)

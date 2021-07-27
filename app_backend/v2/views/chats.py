@@ -39,12 +39,9 @@ def chats(request, uid=None):
         if request.method == "POST":
             user        = User.objects.get(uid=uid)
             requestJson = json.loads(request.body)
-
-            if requestJson['isDirectMessage']: chatName = ''
-            else:                              chatName = requestJson['chatName']
-
+            
             chat = Chat.objects.create(
-                chatName        = chatName,
+                chatName        = requestJson['chatName'],
                 isDirectMessage = requestJson['isDirectMessage']
             )
 
@@ -121,6 +118,22 @@ def chat(request, uid=None, chatID=None):
 
             return JsonResponse(chatItem)
             
+    except:
+        print(" [ERROR]", sys.exc_info())
+        return HttpResponse(status=500)
+
+@csrf_exempt
+def updated(request, uid=None, chatID=None):
+    try:
+        # This view exists to let a client tell the database that they have read all the most recent
+        # chat items in a particular chat. 
+        if request.method == "POST":
+            chatMember = ChatMember.objects.filter(chat__chatID=chatID).filter(member__uid=uid).first()
+            chatMember.isUpdated = True
+            chatMember.save()
+
+            return HttpResponse(status=200)
+
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)

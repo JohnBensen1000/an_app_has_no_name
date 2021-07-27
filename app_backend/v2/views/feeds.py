@@ -61,7 +61,7 @@ def recommendations_feed(request):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-def following_feed(request, uid=None):
+def following_feed(request):
     try:
         # Returns a list of posts made by all creators that a user is following. Starts looking through
         # all the posts that the user has not watched yet, and if there is room, fills in the rest of the
