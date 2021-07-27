@@ -17,9 +17,9 @@ if __name__ == "__main__":
         'isPost': False,
         'text': 'a' * random.randint(2, 10)
     }
-    requests.post(url2, data=json.dumps(data))
+    # requests.post(url2, data=json.dumps(data))
     requests.post(url3, data=json.dumps(data))
-    # requests.post(url4, data=json.dumps(data))
+    requests.post(url4, data=json.dumps(data))
 
 
 

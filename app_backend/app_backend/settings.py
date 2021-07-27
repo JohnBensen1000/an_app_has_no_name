@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'models',
+    'v1',
+    'v2',
     
     'django.contrib.admin',
     'django.contrib.auth',

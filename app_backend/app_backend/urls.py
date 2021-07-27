@@ -17,13 +17,15 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('v1/access/',          include("access.urls")),
-	path('v1/users/',           include("users.urls")), 
-    path('v1/authentication/',  include("authentication.urls")),
-    path('v1/posts/',           include("posts.urls")),
-    path('v1/relationships/',   include("relationships.urls")),
-    path('v1/new_content/',     include("new_content.urls")),
-    path('v1/chats/',           include("chats.urls")),
-    path('v1/comments/',        include("comments.urls")),
+    path('v1/', include('v1.urls')),
+    path('v2/', include('v2.urls')),
+    # path('v1/access/',          include("access.urls")),
+	# path('v1/users/',           include("users.urls")), 
+    # path('v1/authentication/',  include("authentication.urls")),
+    # path('v1/posts/',           include("posts.urls")),
+    # path('v1/relationships/',   include("relationships.urls")),
+    # path('v1/new_content/',     include("new_content.urls")),
+    # path('v1/chats/',           include("chats.urls")),
+    # path('v1/comments/',        include("comments.urls")),
     path('admin/', admin.site.urls),
 ]

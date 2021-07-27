@@ -4,6 +4,8 @@ import random
 
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import pre_delete 
+from django.dispatch import receiver
 
 from google.cloud import firestore
 from google.cloud import storage, firestore
@@ -48,6 +50,16 @@ class Preferences(models.Model):
 				nonFloatOffset += 1
 
 		self.save()
+
+	def to_dict(self):
+		keys   = list(self.__dict__.keys())[2: ]
+		values = list(self.__dict__.values())[2: ]
+
+		returnList = []
+		for i in range(len(keys)):
+			returnList.append({keys[i]: values[i]})
+
+		return {'preferences': returnList}
 
 class Profile(models.Model):
 	'''
@@ -122,16 +134,6 @@ class User(models.Model):
 			'username':     self.username,
 			'profileColor': self.profileColor
 		}
-
-class Following(models.Model):
-	'''
-		Keeps track of the fact that one user is a creator. The boolean field newFollower is True if
-	 	this user is a new follower.
-	'''
-
-	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
-	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
-	newFollower = models.BooleanField(default=True)
 
 class Blocked(models.Model):
 	'''
@@ -236,3 +238,30 @@ class Reported(models.Model):
 	'''
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+class Following(models.Model):
+	'''
+		Keeps track of the fact that one user is a creator. The boolean field newFollower is True if
+	 	this user is a new follower. When this entity is deleted, deletes all direct messages between
+		the follower and the creator. 
+	'''
+
+	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
+	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
+	newFollower = models.BooleanField(default=True)
+
+	def delete(self):
+		followerChats = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=self.follower)]
+		creatorChats  = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=self.creator)]
+
+		for chat in Chat.objects.filter(isDirectMessage=True).filter(chatID__in=followerChats).filter(chatID__in=creatorChats):
+			chat.delete()
+
+		super(Following, self).delete()
+
+	def to_dict(self):
+		return {
+			'follower': self.follower.uid,
+			'creator': self.creator.uid,
+			'newFollower': self.newFollower,
+		}
