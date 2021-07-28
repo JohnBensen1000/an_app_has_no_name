@@ -13,6 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 from google.cloud import firestore
 from google.cloud import storage, firestore, vision
 
+from firebase_admin import messaging
+
 import methods.nsfw_filter as nsfw_filter
 
 db = firestore.Client()
@@ -59,12 +61,18 @@ def chats(request, uid=None):
 
             return JsonResponse(chat.to_dict())
 
-        # Returns a list of the chatIDs of each chat that a user is part of. 
+        # Returns a list of the chatIDs of each chat that a user is part of. Sorts by the how
+        # recent the last chat item was sent in a chat. 
         if request.method == "GET":
-            user     = User.objects.get(uid=uid)
-            chatList = list()
-            for chatMember in ChatMember.objects.filter(member=user):
-                chatList.append(chatMember.chat.to_dict())
+            chatIdList = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member__uid=uid)]
+            chatList   = list()
+
+            for chat in Chat.objects.filter(chatID__in=chatIdList).order_by("-lastChatTime"):
+                chatMember            = ChatMember.objects.filter(member__uid=uid).filter(chat__chatID=chat.chatID).first()
+                chatDict              = chat.to_dict()
+                chatDict['isUpdated'] = chatMember.isUpdated
+
+                chatList.append(chatDict)
 
             return JsonResponse({"chats": chatList})
 
@@ -102,8 +110,6 @@ def chat(request, uid=None, chatID=None):
                 }
                 docRef.set(chatItem)
 
-                return JsonResponse(chatItem)
-
             else:
                 if profanity.contains_profanity(newChatJson['text']):
                     return JsonResponse({"denied": "profanity"})
@@ -115,9 +121,31 @@ def chat(request, uid=None, chatID=None):
                     'text':   newChatJson['text']
                 } 
                 docRef.set(chatItem)
-
-            return JsonResponse(chatItem)
             
+            user = User.objects.get(uid=uid)
+            chat = Chat.objects.get(chatID=chatID)
+            chat.save()
+
+            for chatMember in ChatMember.objects.filter(chat=chat).exclude(member__uid=uid):
+                chatMember.isUpdated = False
+                chatMember.save()
+
+                if chatMember.member.deviceToken is not None and chatMember.member.deviceToken != "":
+                    message = messaging.Message(
+                        notification = messaging.Notification(
+                            title = "You got a new message!",
+                            body  = user.username + " sent you a message, click here to reply!"
+                        ),
+                        data = {
+                            'chatID': chatID
+                        }, 
+                        token=chatMember.member.deviceToken
+                    )
+                    messaging.send(message)
+        
+            del chatItem['time']
+            return JsonResponse(chatItem)
+                
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)

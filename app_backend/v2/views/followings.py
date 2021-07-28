@@ -29,8 +29,9 @@ def followings(request, uid=None):
         # Creates a new following relationship between the user and the creator. If the user has 
         # been blocking the creator, then deletes the blocking relationship. Checks if the creator 
         # is following the user. If they are, then sets the field "newFollower" to False in that
-        # relationship (even if it is already False). If they are not, then newFollower is set to 
-        # true in the new following relationship.   
+        # relationship (even if it is already False) and creates a new direct message between these
+        # two users. If they are not, then newFollower is set to true in the new following 
+        # relationship.   
         if request.method == "POST":
             user        = User.objects.get(uid=uid)
             requestBody = json.loads(request.body)
@@ -45,6 +46,10 @@ def followings(request, uid=None):
                 following             = Following.objects.get(follower=creator, creator=user)
                 following.newFollower = False
                 following.save()
+
+                chat = Chat.objects.create(isDirectMessage=True)
+                ChatMember.objects.create(isOwner=True, chat=chat, member=user)
+                ChatMember.objects.create(isOwner=True, chat=chat, member=creator)
 
             following = Following.objects.create(
                 follower    = user,

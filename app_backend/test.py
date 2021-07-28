@@ -9,17 +9,14 @@ if __name__ == "__main__":
 
     # url  = 'http://127.0.0.1:8000/v1/chats/' + unitTest3 + '/162715955429/'
 
-    url2 = 'http://127.0.0.1:8000/v1/chats/qwoKMa3PdPTtKmwrKTen90dkZ0d2/162716130122/'
-    url3 = 'http://127.0.0.1:8000/v1/chats/9fERL7sjOgeCl67F3GvIUEPa6I13/162689240783/'
-    url4 = 'http://127.0.0.1:8000/v1/chats/PBOHw7bchYd0u4B4eL0nBz1oWrz1/162689244044/'
+    url = 'http://127.0.0.1:8000/v2/chats/6BFsGFS8YGfyv9krYdaIWBqDRzD2/162742503708'
 
     data = {
         'isPost': False,
         'text': 'a' * random.randint(2, 10)
     }
     # requests.post(url2, data=json.dumps(data))
-    requests.post(url3, data=json.dumps(data))
-    requests.post(url4, data=json.dumps(data))
+    requests.post(url, data=json.dumps(data))
 
 
 
