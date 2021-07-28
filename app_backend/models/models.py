@@ -99,7 +99,7 @@ class User(models.Model):
 	phone  = models.CharField(max_length=15, default="") 
 	uid    = models.CharField(max_length=50, unique=True) 
 	
-	deviceToken = models.TextField(default=None, null=True, blank=True)
+	deviceToken = models.TextField(default=None, blank=True, null=True)
 	isUpdated   = models.BooleanField(default=True)
 
 	username          = models.CharField(max_length=20, default="")
