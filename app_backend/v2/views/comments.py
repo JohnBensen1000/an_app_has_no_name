@@ -13,10 +13,13 @@ from django.apps import apps
 
 from google.cloud import firestore
 
+import methods.activity_feed as activity_feed
+
 db = firestore.Client()
 
 User          = apps.get_model("models", "User")
 Blocked       = apps.get_model("models", "Blocked")
+Post          = apps.get_model("models", "Post")
 
 @csrf_exempt
 def comments(request, postID=None):
@@ -45,8 +48,9 @@ def comments(request, postID=None):
             }
             commentDocRef.set(commentDict)
 
+            activity_feed.add_new_comment(postID, requestJson["uid"])
+
             del commentDict['datePosted']
-            
             return JsonResponse(commentDict)
 
         # Gets a list of the comments of a post. 

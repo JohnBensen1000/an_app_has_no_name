@@ -100,6 +100,7 @@ class User(models.Model):
 	uid    = models.CharField(max_length=50, unique=True) 
 	
 	deviceToken = models.TextField(default=None, null=True, blank=True)
+	isUpdated   = models.BooleanField(default=True)
 
 	username          = models.CharField(max_length=20, default="")
 	preferredLanguage = models.CharField(max_length=20, default="")

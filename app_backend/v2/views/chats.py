@@ -133,8 +133,7 @@ def chat(request, uid=None, chatID=None):
                 if chatMember.member.deviceToken is not None and chatMember.member.deviceToken != "":
                     message = messaging.Message(
                         notification = messaging.Notification(
-                            title = "You got a new message!",
-                            body  = user.username + " sent you a message, click here to reply!"
+                            title = user.username + " sent you a message, click here to reply!"
                         ),
                         data = {
                             'chatID': chatID

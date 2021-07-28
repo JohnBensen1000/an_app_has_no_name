@@ -12,6 +12,8 @@ import methods.send_email as send_email
 
 import firebase_admin
 
+import methods.activity_feed as activity_feed
+
 # default_app = firebase_admin.initialize_app()
 
 User        = apps.get_model("models", "User")
@@ -50,6 +52,10 @@ def followings(request, uid=None):
                 chat = Chat.objects.create(isDirectMessage=True)
                 ChatMember.objects.create(isOwner=True, chat=chat, member=user)
                 ChatMember.objects.create(isOwner=True, chat=chat, member=creator)
+                activity_feed.add_follower(creator, user)
+                
+            else:
+                activity_feed.add_new_follower(creator, user)
 
             following = Following.objects.create(
                 follower    = user,

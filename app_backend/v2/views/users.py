@@ -110,3 +110,20 @@ def user(request, uid=None):
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
+@csrf_exempt
+def activity(request, uid=None):
+	try:
+		if request.method == "GET":
+			user = User.objects.get(uid=uid)
+			return JsonResponse({'isUpdated': user.isUpdated})
+
+		if request.method == "PUT":
+			user = User.objects.get(uid=uid)
+			user.isUpdated = True
+			user.save()
+
+			return JsonResponse({'isUpdated': user.isUpdated})
+
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)

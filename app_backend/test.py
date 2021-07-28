@@ -3,21 +3,36 @@ import random
 import json
 
 if __name__ == "__main__":
-    # unitTest2 = 'qwoKMa3PdPTtKmwrKTen90dkZ0d2'
+    # # unitTest2 = 'qwoKMa3PdPTtKmwrKTen90dkZ0d2'
     # unitTest3 = '9fERL7sjOgeCl67F3GvIUEPa6I13'
-    # unitTest4 = 'PBOHw7bchYd0u4B4eL0nBz1oWrz1'
+    # # unitTest4 = 'PBOHw7bchYd0u4B4eL0nBz1oWrz1'
 
     # url  = 'http://127.0.0.1:8000/v1/chats/' + unitTest3 + '/162715955429/'
 
-    url = 'http://127.0.0.1:8000/v2/chats/6BFsGFS8YGfyv9krYdaIWBqDRzD2/162742503708'
+    # # url = 'http://127.0.0.1:8000/v2/comments/162748063556'
+
+    # # data = {
+    # #     'path': '', 
+    # #     'comment': 'c' * random.randint(2, 10), 
+    # #     'uid': 'ezLOwMxxPYOo0bJ11OYi9fzkqpu1'
+    # # }
+
+
+    # data = {
+    #     'isPost': False,
+    #     'text': 'a' * random.randint(2, 10)
+    # }
+    # # requests.post(url2, data=json.dumps(data))
+    # requests.post(url, data=json.dumps(data))
+
+    url = 'http://127.0.0.1:8000/v2/chats/RYXeQDedJBN8kmNPO73IbiB24WE3/162742620545'
 
     data = {
         'isPost': False,
         'text': 'a' * random.randint(2, 10)
     }
-    # requests.post(url2, data=json.dumps(data))
-    requests.post(url, data=json.dumps(data))
 
+    requests.post(url, data=json.dumps(data))
 
 
 # import requests

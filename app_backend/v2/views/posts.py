@@ -111,6 +111,11 @@ def profile(request, uid=None):
 @csrf_exempt
 def post(request, uid=None, postID=None):
     try:
+        # Simply returns the post dict for the post identified by postID.
+        if request.method == "GET":
+            post = Post.objects.get(postID=postID)
+            return JsonResponse(post.to_dict())
+
         # Allows a user to delete one of their posts.
         if request.method == "DELETE":
             post = Post.objects.get(postID=postID)
