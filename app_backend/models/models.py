@@ -150,7 +150,7 @@ class Chat(models.Model):
 	chatID          = models.CharField(max_length=50, unique=True)
 	chatName        = models.CharField(max_length=50, default="")
 	isDirectMessage = models.BooleanField(default=False)
-	lastChatTime    = models.DateTimeField()
+	lastChatTime    = models.DateTimeField(default=None, blank=True, null=True)
 
 	def save(self, *args, **kwargs):
 		if self.pk is None:
