@@ -4,6 +4,8 @@ import random
 
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import pre_delete 
+from django.dispatch import receiver
 
 from google.cloud import firestore
 from google.cloud import storage, firestore
@@ -49,6 +51,16 @@ class Preferences(models.Model):
 
 		self.save()
 
+	def to_dict(self):
+		keys   = list(self.__dict__.keys())[2: ]
+		values = list(self.__dict__.values())[2: ]
+
+		returnList = []
+		for i in range(len(keys)):
+			returnList.append({keys[i]: values[i]})
+
+		return {'preferences': returnList}
+
 class Profile(models.Model):
 	'''
 		A user's profile is stored in google cloud storage, and could be an image or a video. This
@@ -88,6 +100,7 @@ class User(models.Model):
 	uid    = models.CharField(max_length=50, unique=True) 
 	
 	deviceToken = models.TextField(default=None, null=True, blank=True)
+	isUpdated   = models.BooleanField(default=True)
 
 	username          = models.CharField(max_length=20, default="")
 	preferredLanguage = models.CharField(max_length=20, default="")
@@ -123,16 +136,6 @@ class User(models.Model):
 			'profileColor': self.profileColor
 		}
 
-class Following(models.Model):
-	'''
-		Keeps track of the fact that one user is a creator. The boolean field newFollower is True if
-	 	this user is a new follower.
-	'''
-
-	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
-	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
-	newFollower = models.BooleanField(default=True)
-
 class Blocked(models.Model):
 	'''
 		Keeps track of the fact that a user is currently blocking a creator.
@@ -150,7 +153,7 @@ class Chat(models.Model):
 	chatID          = models.CharField(max_length=50, unique=True)
 	chatName        = models.CharField(max_length=50, default="")
 	isDirectMessage = models.BooleanField(default=False)
-	lastChatTime    = models.DateTimeField(default=None, blank=True, null=True)
+	lastChatTime    = models.DateTimeField()
 
 	def save(self, *args, **kwargs):
 		if self.pk is None:
@@ -236,3 +239,30 @@ class Reported(models.Model):
 	'''
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+class Following(models.Model):
+	'''
+		Keeps track of the fact that one user is a creator. The boolean field newFollower is True if
+	 	this user is a new follower. When this entity is deleted, deletes all direct messages between
+		the follower and the creator. 
+	'''
+
+	follower    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followings")
+	creator     = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
+	newFollower = models.BooleanField(default=True)
+
+	def delete(self):
+		followerChats = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=self.follower)]
+		creatorChats  = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member=self.creator)]
+
+		for chat in Chat.objects.filter(isDirectMessage=True).filter(chatID__in=followerChats).filter(chatID__in=creatorChats):
+			chat.delete()
+
+		super(Following, self).delete()
+
+	def to_dict(self):
+		return {
+			'follower': self.follower.uid,
+			'creator': self.creator.uid,
+			'newFollower': self.newFollower,
+		}
