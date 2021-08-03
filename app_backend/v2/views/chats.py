@@ -44,7 +44,7 @@ def chats(request, uid=None):
             
             chat = Chat.objects.create(
                 chatName        = requestJson['chatName'],
-                isDirectMessage = requestJson['isDirectMessage']
+                isDirectMessage = requestJson['isDirectMessage'],
             )
 
             ChatMember.objects.create(
@@ -105,7 +105,8 @@ def chat(request, uid=None, chatID=None):
                     'isPost': True,
                     'post':   {
                         'downloadURL': newChatJson['downloadURL'],
-                        'isImage':     newChatJson['isImage']
+                        'isImage':     newChatJson['isImage'],
+                        'caption':     newChatJson['caption'],
                     }
                 }
                 docRef.set(chatItem)

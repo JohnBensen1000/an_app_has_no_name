@@ -58,5 +58,5 @@ class TestFollowers(BaseTest):
         responseBody = json.loads(response.content)
         
         self.assertEqual(response.status_code, 200) 
-        self.assertEqual(responseBody["followerList"][0]['uid'], user2.uid)
-        self.assertEqual(len(responseBody["followerList"]), 1)
+        self.assertEqual(responseBody["followers"][0]['uid'], user2.uid)
+        self.assertEqual(len(responseBody["followers"]), 1)

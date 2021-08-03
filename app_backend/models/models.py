@@ -195,6 +195,7 @@ class Post(models.Model):
 	isPrivate   = models.BooleanField(default=False)
 	isImage     = models.BooleanField()
 	isFlagged   = models.BooleanField(default=False)
+	caption	    = models.TextField(default="")
 
 	preferences = models.OneToOneField(Preferences, on_delete=models.CASCADE)
 
@@ -222,6 +223,7 @@ class Post(models.Model):
 			'postID':      str(self.postID),
 			'isImage':     self.isImage,
 			'downloadURL': self.downloadURL,
+			'caption':     self.caption,
 		}
 
 class WatchedBy(models.Model):

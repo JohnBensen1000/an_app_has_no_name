@@ -36,7 +36,8 @@ def posts(request, uid=None):
                 creator     = user,
                 isImage	    = newPostJson["isImage"],
                 isPrivate   = newPostJson["isPrivate"],
-                downloadURL = newPostJson["downloadURL"]
+                downloadURL = newPostJson["downloadURL"],
+                caption     = newPostJson["caption"] if "caption" in newPostJson else "",
             )
 
             if not nsfw_filter.check_if_post_is_safe(newPostJson['downloadURL']):

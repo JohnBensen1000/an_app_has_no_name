@@ -31,7 +31,7 @@ class TestRecordWatched(BaseTest):
             url,
             json.dumps({
                 "uid": user2.uid,
-                "userRating": 1,
+                "rating": 1,
             }),
             content_type='application/json'
         )

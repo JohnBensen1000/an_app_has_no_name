@@ -175,7 +175,7 @@ def chat(request, uid=None, chatID=None):
                 chatMember.isUpdated = False
                 chatMember.save()
 
-                if chatMember.member.deviceToken is not None:
+                if chatMember.member.deviceToken is not None and chatMember.member.deviceToken != "":
                     message = messaging.Message(data={'chatID': chatID}, token=chatMember.member.deviceToken)
                     messaging.send(message)
             

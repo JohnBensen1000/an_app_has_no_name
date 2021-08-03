@@ -1,3 +1,4 @@
+from typing import cast
 from google.cloud import firestore
 from firebase_admin import messaging
 
@@ -6,7 +7,8 @@ from models.models import User, Post
 db = firestore.Client()
 
 def _upload_activity(user, activity):
-    activity['time'] = firestore.SERVER_TIMESTAMP
+    activity['time']  = firestore.SERVER_TIMESTAMP
+    activity['isNew'] = True
 
     docRef = db.collection('ACTIVITY').document(user.uid).collection('activity').document()
     docRef.set(activity)
@@ -25,7 +27,9 @@ def _send_push_notification(user, notification):
             }, 
             token=user.deviceToken
         )
+
         messaging.send(message)
+
 
 def add_new_comment(postID, commenterUid):
     commenter = User.objects.get(uid=commenterUid)
