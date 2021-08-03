@@ -3,6 +3,7 @@ import json
 import os
 import ssl
 import smtplib
+from itertools import chain
 
 from better_profanity import profanity
 
@@ -62,18 +63,20 @@ def chats(request, uid=None):
             return JsonResponse(chat.to_dict())
 
         # Returns a list of the chatIDs of each chat that a user is part of. Sorts by the how
-        # recent the last chat item was sent in a chat. 
+        # recent the last chat item was sent in a chat. All chats that have a None value for
+        # lastChatTime are put at the end of the list. 
         if request.method == "GET":
             chatIdList = [chatMember.chat.chatID for chatMember in ChatMember.objects.filter(member__uid=uid)]
             chatList   = list()
+            chatQuery  = Chat.objects.filter(chatID__in=chatIdList)
 
-            for chat in Chat.objects.filter(chatID__in=chatIdList).order_by("-lastChatTime"):
+            for chat in list(chain(chatQuery.exclude(lastChatTime=None).order_by("-lastChatTime"), chatQuery.filter(lastChatTime=None))):
                 chatMember            = ChatMember.objects.filter(member__uid=uid).filter(chat__chatID=chat.chatID).first()
                 chatDict              = chat.to_dict()
                 chatDict['isUpdated'] = chatMember.isUpdated
 
                 chatList.append(chatDict)
-
+            
             return JsonResponse({"chats": chatList})
 
     except:
