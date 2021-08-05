@@ -16,7 +16,7 @@ from .views.comments import *
 urlpatterns = [
     path('users',                                       users,                  name="users"),
     path('users/<slug:uid>',                            user,                   name="user"),
-    path('users/<slug:uid>/activity',                   activity,               name="activity"),  
+    path('users/<slug:uid>/activity',                   activity,               name="activity"), 
     path('posts/<slug:uid>',                            posts,                  name="posts"),
     path('posts/<slug:uid>/profile',                    profile,                name="profile"),
     path('posts/<slug:uid>/<slug:postID>',              post,                   name="post"),

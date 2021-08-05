@@ -115,9 +115,6 @@ def chat(request, uid=None, chatID=None):
                 docRef.set(chatItem)
 
             else:
-                if profanity.contains_profanity(newChatJson['text']):
-                    return JsonResponse({"denied": "profanity"})
-
                 chatItem = {
                     'uid':    uid,
                     'time':   firestore.SERVER_TIMESTAMP,

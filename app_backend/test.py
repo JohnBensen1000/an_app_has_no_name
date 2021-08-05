@@ -18,24 +18,24 @@ if __name__ == "__main__":
     # }
 
 
-    # data = {
-    #     'isPost': False,
-    #     'text': 'a' * random.randint(2, 10)
-    # }
+    data = {
+        'isPost': False,
+        'text': 'a' * random.randint(2, 10)
+    }
     # # requests.post(url2, data=json.dumps(data))
     # requests.post(url, data=json.dumps(data))
-
+    url = 'http://127.0.0.1:8000/v2/chats/GF7mhEn8B1RDYEmAGFj9Du0u8xG3/162791370748'
     # url = 'http://127.0.0.1:8000/v2/comments/162791163889'
-    url = 'http://entropy-317014.uc.r.appspot.com/v2/comments/162777794748'
+    # url = 'http://entropy-317014.uc.r.appspot.com/v2/comments/162777794748'
     # data = {
     #     'isPost': False,
     #     'text': 'a' * random.randint(2, 10)
     # }
-    data = {
-        'path': '', 
-        'comment': 'testing comments in production', 
-        'uid': 'OWKg39DhKkSMeAIc6telpHheMvi2'
-    }
+    # data = {
+    #     'path': '', 
+    #     'comment': 'testing comments in production', 
+    #     'uid': 'OWKg39DhKkSMeAIc6telpHheMvi2'
+    # }
 
 
     requests.post(url, data=json.dumps(data))
