@@ -45,7 +45,7 @@ def add_new_comment(postID, commenterUid):
     }
 
     _upload_activity(user, activity)
-    _send_push_notification(user, user.username + "commented on your post!")
+    _send_push_notification(user, commenter.username + " commented on your post!")
 
 def add_new_follower(user, follower):
     activity = {
@@ -56,7 +56,7 @@ def add_new_follower(user, follower):
     }
 
     _upload_activity(user, activity)
-    _send_push_notification(user, user.username + "started following you!")
+    _send_push_notification(user, follower.username + " started following you!")
 
 
 def add_follower(user, follower):
@@ -68,4 +68,4 @@ def add_follower(user, follower):
     }
 
     _upload_activity(user, activity)
-    _send_push_notification(user, user.username + "started following you!")
+    _send_push_notification(user, follower.username + " started following you!")
