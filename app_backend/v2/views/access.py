@@ -10,7 +10,7 @@ from django.http import HttpResponse, JsonResponse
 def access(request):
     try:
         if request.method == "GET":
-            if request.GET['token'] == "access-token12":
+            if request.GET['token'] == "new-access-token11":
                 return JsonResponse({'accessGranted': True})
             else:
                 return JsonResponse({'accessGranted': False})
