@@ -14,7 +14,7 @@ ChatMember    = apps.get_model("models", "ChatMember")
 Chat          = apps.get_model("models", "Chat")
 Post          = apps.get_model("models", "Post")
 
-class TestPosts(BaseTest):
+class TestChats(BaseTest):
     def setUp(self):
         self.user   = self.create_user_object('test', 'test')
         self.client = Client()
@@ -96,11 +96,3 @@ class TestPosts(BaseTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(chatList), 3)
-        # self.assertEqual(chatList[0]['chatID'], chat1.chatID)
-        # self.assertEqual(chatList[1]['chatID'], chat2.chatID)
-        # self.assertEqual(chatList[2]['chatID'], chat3.chatID)
-
-        # members = chatList[0]['members']
-        # self.assertEqual(members[0]['uid'], self.user.uid)
-        # self.assertEqual(members[1]['uid'], user1.uid)
-        # self.assertEqual(members[2]['uid'], user2.uid)

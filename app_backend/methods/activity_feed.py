@@ -1,3 +1,5 @@
+import sys
+
 from typing import cast
 from google.cloud import firestore
 from firebase_admin import messaging
@@ -17,19 +19,21 @@ def _upload_activity(user, activity):
     user.save()
 
 def _send_push_notification(user, notification):
-    if user.deviceToken != None and user.deviceToken != '':
-        message = messaging.Message(
-            notification = messaging.Notification(
-                title = notification
-            ),
-            data = {
-                'newActivity': 'True'
-            }, 
-            token=user.deviceToken
-        )
+    try:
+        if user.deviceToken != None and user.deviceToken != '':
+            message = messaging.Message(
+                notification = messaging.Notification(
+                    title = notification
+                ),
+                data = {
+                    'newActivity': 'True'
+                }, 
+                token=user.deviceToken
+            )
 
-        messaging.send(message)
-
+            messaging.send(message)
+    except:
+        print(" [MESSAGING ERROR]", sys.exc_info())
 
 def add_new_comment(postID, commenterUid):
     commenter = User.objects.get(uid=commenterUid)

@@ -33,12 +33,16 @@ def followings(request, uid=None):
         # is following the user. If they are, then sets the field "newFollower" to False in that
         # relationship (even if it is already False) and creates a new direct message between these
         # two users. If they are not, then newFollower is set to true in the new following 
-        # relationship.   
+        # relationship. Checks to see if the following relationship already exists before creating 
+        # any new entries into the database. 
         if request.method == "POST":
             user        = User.objects.get(uid=uid)
             requestBody = json.loads(request.body)
             creator     = User.objects.get(uid=requestBody['uid'])
             newFollower = True
+
+            if Following.objects.filter(follower=user, creator=creator).exists():
+                return JsonResponse({'denied': 'already_following'})
 
             if Blocked.objects.filter(user=user, creator=creator).exists():
                 Blocked.objects.filter(user=user, creator=creator).delete()
@@ -52,6 +56,7 @@ def followings(request, uid=None):
                 chat = Chat.objects.create(isDirectMessage=True)
                 ChatMember.objects.create(isOwner=True, chat=chat, member=user)
                 ChatMember.objects.create(isOwner=True, chat=chat, member=creator)
+
                 activity_feed.add_follower(creator, user)
                 
             else:
@@ -78,6 +83,15 @@ def followings(request, uid=None):
                 })
 
             return JsonResponse({"followings": followingsList})
+
+        # # Returns a list of all creators that a user is following. 
+        # if request.method == "GET":
+        #     user           = User.objects.get(uid=uid)
+        #     followingsList = list()
+        #     for following in Following.objects.filter(follower=user):
+        #         followingsList.append(following.creator.uid)
+
+            # return JsonResponse({"followings": followingsList})
 
     except:
         print(" [ERROR]", sys.exc_info())

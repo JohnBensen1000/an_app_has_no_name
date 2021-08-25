@@ -35,7 +35,7 @@ def watched(request, postID=None):
             post        = Post.objects.get(postID=postID)
 
             if WatchedBy.objects.filter(user=user, post=post).exists():
-                return HttpResponse(status=200)
+                return JsonResponse({'postID': postID, 'uid': user.uid})
 
             userPref = np.array(user.preferences.list)
             postPref = np.array(post.preferences.list)

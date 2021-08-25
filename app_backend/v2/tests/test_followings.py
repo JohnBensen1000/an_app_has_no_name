@@ -176,3 +176,56 @@ class TestFollowings(BaseTest):
         self.assertFalse(Chat.objects.filter(chatID=chat1.chatID).exists())
         self.assertTrue(Chat.objects.filter(chatID=chat2.chatID).exists())
 
+    def test_if_chat_is_created(self):
+        '''
+            If user1 follows user2, and user2 starts to follow user1, then a direct message
+            should be created between these two users.
+        '''
+        user1 = self.create_user_object('user1', 'user1')
+        user2 = self.create_user_object('user2', 'user2')
+
+        Following.objects.create(follower=user2, creator=user1)
+
+        url     = reverse('followings', kwargs={'uid': user1.uid})
+        respose = self.client.post(
+            url,
+            json.dumps({
+                'uid': user2.uid,
+            }),
+            content_type='application/json'
+        )
+
+        self.assertEqual(respose.status_code, 200)
+        self.assertEqual(Chat.objects.count(), 1)
+
+    def test_when_users_already_follow_each_other(self):
+        '''
+            When two users are already following each other, and one of the users "starts"
+            following the other, then no new entities should be created in the database.
+        '''
+        user1 = self.create_user_object('user1', 'user1')
+        user2 = self.create_user_object('user2', 'user2')
+
+        Following.objects.create(follower=user2, creator=user1)
+        Following.objects.create(follower=user1, creator=user2)
+
+        chat = Chat.objects.create(isDirectMessage=True)
+        ChatMember.objects.create(isOwner=True, chat=chat, member=user1)
+        ChatMember.objects.create(isOwner=True, chat=chat, member=user2)
+
+        url      = reverse('followings', kwargs={'uid': user1.uid})
+        response = self.client.post(
+            url,
+            json.dumps({
+                'uid': user2.uid,
+            }),
+            content_type='application/json'
+        )
+        jsonBody = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(jsonBody['denied'], 'already_following')
+        self.assertEqual(Chat.objects.count(), 1)
+        self.assertEqual(ChatMember.objects.filter(chat=chat, member=user1).count(), 1)
+        self.assertEqual(ChatMember.objects.filter(chat=chat, member=user2).count(), 1)
+        self.assertEqual(Following.objects.count(), 2)

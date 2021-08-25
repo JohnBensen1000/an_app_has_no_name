@@ -42,7 +42,7 @@ def blocked(request, uid=None):
                 creator = creator,
             )
 
-            return JsonResponse({'user': user.uid, 'creator': creator.uid})
+            return JsonResponse(creator.to_dict())
 
         # Returns a list of all creators that the user is blocking.
         if request.method == "GET":

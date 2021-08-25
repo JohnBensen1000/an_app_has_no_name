@@ -160,7 +160,7 @@ def updated(request, uid=None, chatID=None):
             chatMember.isUpdated = True
             chatMember.save()
 
-            return HttpResponse(status=200)
+            return JsonResponse({'isUpdated': chatMember.isUpdated})
 
     except:
         print(" [ERROR]", sys.exc_info())
