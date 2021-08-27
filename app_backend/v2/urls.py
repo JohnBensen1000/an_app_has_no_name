@@ -8,7 +8,6 @@ from .views.blocked import *
 from .views.watched import *
 from .views.feeds import *
 from .views.chats import *
-from .views.access import *
 from .views.reports import *
 from .views.preferences import *
 from .views.comments import *
@@ -35,7 +34,6 @@ urlpatterns = [
     path('reports/<slug:uid>/post',                     report_post,            name="report_post"),
     path('reports/<slug:uid>/profile',                  report_profile,         name="report_profile"),
     path('reports/<slug:uid>/<slug:postID>/comment',    report_comment,         name="report_comment"),
-    path('access',                                      access,                 name="access"),
     path('preferences',                                 preferences,            name="preferences"),    
     path('preferences/<slug:uid>',                      user_preferences,       name="user_preferences"),
     path('comments/<slug:postID>',                      comments,               name="comments"),
