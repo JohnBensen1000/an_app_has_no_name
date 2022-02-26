@@ -4,7 +4,10 @@ from django.test import TestCase, Client, client
 from django.urls import reverse
 from django.apps import apps
 
-from test import BaseTest
+from .test import BaseTest
+
+import firebase_admin
+from firebase_admin import auth
 
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")
@@ -199,6 +202,20 @@ class UserTests(BaseTest):
         self.assertEqual(Chat.objects.count(), 0)
         self.assertEqual(ChatMember.objects.count(), 0)
         self.assertEqual(ChatMember.objects.filter(member=user2).count(), 0)
+
+    def test_delete_firebase_account(self):
+        user          = self.create_user_object("test_user", "test_user")
+        firebase_user = auth.create_user(email=user.userID + "@gmail.com")
+        user.uid      = firebase_user.uid
+        user.save()
+
+        url      = reverse("user", kwargs={'uid': user.uid})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 200)
+        with self.assertRaises(firebase_admin._auth_utils.UserNotFoundError):
+            auth.get_user(user.uid)
+
 
     # def test_get_user_preferences(self):
     #     '''

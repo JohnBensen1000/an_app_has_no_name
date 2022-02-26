@@ -14,6 +14,7 @@ from django.apps import apps
 from google.cloud import firestore
 
 import methods.activity_feed as activity_feed
+import methods.firestore_helpers as firestore_helpers
 
 db = firestore.Client()
 
@@ -53,7 +54,8 @@ def comments(request, postID=None):
 
             activity_feed.add_new_comment(postID, requestJson["uid"])
 
-            del commentDict['datePosted']
+            del commentDict["datePosted"]
+
             return JsonResponse(commentDict)
 
         # Gets a list of the comments of a post. 
@@ -66,6 +68,16 @@ def comments(request, postID=None):
             commentsList = get_all_comments(user, collection, 0)
 
             return JsonResponse({'comments': commentsList})
+
+        if request.method == "DELETE":
+            body          = json.loads(request.body)
+            commentDocRef = db.document('COMMENTS/' + postID + body["path"])
+            commentDocRef.update({
+                "uid": None,
+                "comment": "[deleted]",
+            })
+            
+            return JsonResponse({})
 
     except:
         print(" [ERROR]", sys.exc_info())
@@ -80,9 +92,12 @@ def get_all_comments(user, collection, level):
 
     for commentDoc in collection.order_by('datePosted').stream():
         commentDict = commentDoc.to_dict()
-        creator     = User.objects.get(uid=commentDict["uid"])
+        creator     = None
 
-        if not Blocked.objects.filter(user=user, creator=creator).exists():
+        if commentDict["uid"] is not None:
+            creator = User.objects.get(uid=commentDict["uid"])
+
+        if creator == None or not Blocked.objects.filter(user=user, creator=creator).exists():
             commentDict["level"] = level
             del commentDict["datePosted"]
 

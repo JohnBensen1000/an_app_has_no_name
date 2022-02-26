@@ -4,7 +4,7 @@ from django.test import TestCase, Client, client
 from django.urls import reverse
 from django.apps import apps
 
-from test import BaseTest
+from .test import BaseTest
 
 User          = apps.get_model("models", "User")
 Preferences   = apps.get_model("models", "Preferences")

@@ -6,7 +6,7 @@ class PostNode:
 		self.prev  = None
 
 class LinkedList:
-	def __init__(self, maxSize=128):
+	def __init__(self, maxSize):
 		self.head    = None
 		self.tail    = None
 		self.size    = 0
@@ -22,7 +22,7 @@ class LinkedList:
 		elif newNode.score > self.head.score:
 			self.__add_new_head(newNode)
 
-		else:
+		elif newNode.score >= self.tail.score:
 			self.__insert_node_after_head(newNode)
 
 		self.size += 1

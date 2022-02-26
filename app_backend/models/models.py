@@ -10,6 +10,9 @@ from django.dispatch import receiver
 from google.cloud import firestore
 from google.cloud import storage, firestore
 
+import firebase_admin
+from firebase_admin import auth
+
 db = firestore.Client()
 
 client = storage.Client(project="entropy-317014")
@@ -95,7 +98,7 @@ class User(models.Model):
 		follow them back. 
 	'''
 	userID = models.CharField(max_length=50, unique=True) 
-	email  = models.CharField(max_length=50, unique=True) 
+	email  = models.CharField(max_length=50) 
 	phone  = models.CharField(max_length=15, default="") 
 	uid    = models.CharField(max_length=50, unique=True) 
 	
@@ -120,7 +123,12 @@ class User(models.Model):
 	def friends(self):
 		pass
 
-	def delete_account(self):
+	def delete(self):
+		try:
+			auth.delete_user(self.uid)
+		except (firebase_admin._auth_utils.UserNotFoundError): 
+			print(" [Exception] User, %s not found in Firebase." % self.uid)
+
 		if self.preferences:
 			self.preferences.delete()
 		if self.profile:
@@ -232,15 +240,15 @@ class WatchedBy(models.Model):
 		contains a User and a Post, and records the fact that a User has watched a Post.
 	'''
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
-	post = models.ForeignKey(Post, on_delete=models.CASCADE)
+	post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="watched_by")
 
 class Reported(models.Model):
 	'''
 		Keeps track of the fact that a user has reported a post. This is used to prevent
 		recommending posts that a user has reported.
 	'''
-	user = models.ForeignKey(User, on_delete=models.CASCADE)
-	post = models.ForeignKey(Post, on_delete=models.CASCADE)
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reported")
+	post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reported_by")
 
 class Following(models.Model):
 	'''

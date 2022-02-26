@@ -84,15 +84,6 @@ def followings(request, uid=None):
 
             return JsonResponse({"followings": followingsList})
 
-        # # Returns a list of all creators that a user is following. 
-        # if request.method == "GET":
-        #     user           = User.objects.get(uid=uid)
-        #     followingsList = list()
-        #     for following in Following.objects.filter(follower=user):
-        #         followingsList.append(following.creator.uid)
-
-            # return JsonResponse({"followings": followingsList})
-
     except:
         print(" [ERROR]", sys.exc_info())
         return HttpResponse(status=500)

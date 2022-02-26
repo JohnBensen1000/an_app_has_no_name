@@ -6,6 +6,7 @@ from firebase_admin import auth
 
 from django.http import HttpResponse, JsonResponse
 from django.apps import apps
+from django.db.models import Q
 
 import methods.linked_list as linked_list
 
@@ -29,19 +30,20 @@ def recommendations_feed(request):
 		# the user has created or has reported.
 
 		if request.method == "GET":
-			listSize   = 16
+			listSize   = 32
 			user       = User.objects.get(uid=request.GET['uid'])
 			userPref   = np.array(user.preferences.list)
-			linkedList = linked_list.LinkedList()
+			linkedList = linked_list.LinkedList(listSize)
 
-			watchedList  = [watchedBy.post.postID for watchedBy in WatchedBy.objects.filter(user=user)    ]
-			creatorsList = [following.creator     for following in Following.objects.filter(follower=user)]
-			reportedList = [reported.post.postID  for reported  in Reported.objects.filter(user=user)     ]
-
-			creatorsList.extend([blocked.creator for blocked in Blocked.objects.filter(user=user)])
+			watchedList  = [watchedBy.post.postID for watchedBy in WatchedBy.objects.select_related("post").filter(user=user)]
+			allowedPosts = Post.objects.select_related("preferences") \
+				.exclude(creator=user) \
+				.exclude(creator__blocked_by__user=user) \
+				.exclude(reported_by__user=user) \
+				.exclude(creator__followers__follower=user)
 		 
-			notWatchedPosts = Post.objects.exclude(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
-			watchedPosts    = Post.objects.filter(postID__in=watchedList).exclude(creator=user).exclude(creator__in=creatorsList).exclude(postID__in=reportedList)
+			notWatchedPosts = allowedPosts.exclude(postID__in=watchedList)
+			watchedPosts    = allowedPosts.filter(postID__in=watchedList)
 
 			for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
 				postPref = np.array(post.preferences.list)
@@ -56,35 +58,57 @@ def recommendations_feed(request):
 				postsList.append(post.to_dict())
 			
 			return JsonResponse({"posts": postsList})
+			
+	except:
+		print(" [ERROR]", sys.exc_info())
+		return HttpResponse(status=500)
+
+# Time to load   100 posts and    50 watched posts: 0.028502941131591797
+# Time to load   200 posts and   100 watched posts: 0.016546010971069336
+# Time to load   500 posts and   200 watched posts: 0.019222021102905273
+# Time to load  1000 posts and   500 watched posts: 0.02732992172241211
+# Time to load  2000 posts and  1000 watched posts: 0.04678010940551758
+# Time to load  5000 posts and  2000 watched posts: 0.06942605972290039
+# Time to load 10000 posts and  5000 watched posts: 0.18562102317810059
+# Time to load 20000 posts and 10000 watched posts: 0.3571600914001465
+# Time to load 50000 posts and 20000 watched posts: 0.7600769996643066
+
+def following_feed(request):
+	try:
+		# Returns a list of posts made by all creators that a user is following. Starts looking through
+		# all the posts that the user has not watched yet, and if there is room, fills in the rest of the
+		# list with posts that the user did already watch. 
+		if request.method == "GET":
+			listSize  = 32
+			user      = User.objects.get(uid=request.GET['uid'])
+			postsList = list()
+
+			watchedList = [watchedBy.post.postID for watchedBy in WatchedBy.objects.select_related("post").filter(user=user)]
+			allowedPosts = Post.objects.filter(creator__followers__follower=user)
+
+			notWatchedPosts = allowedPosts.exclude(postID__in=watchedList)
+			watchedPosts    = allowedPosts.filter(postID__in=watchedList)
+
+			for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
+				postsList.append(post.to_dict()) 
+
+			for post in watchedPosts.order_by('timeCreated').reverse()[:listSize - len(postsList)]:
+				postsList.append(post.to_dict())
+
+			return JsonResponse({"posts": postsList})        
 
 	except:
 		print(" [ERROR]", sys.exc_info())
 		return HttpResponse(status=500)
 
-def following_feed(request):
-    try:
-        # Returns a list of posts made by all creators that a user is following. Starts looking through
-        # all the posts that the user has not watched yet, and if there is room, fills in the rest of the
-        # list with posts that the user did already watch. 
-        if request.method == "GET":
-            listSize    = 16
-            user        = User.objects.get(uid=request.GET['uid'])
-            followings  = [relationship.creator for relationship in Following.objects.filter(follower=user)]
-            watchedList = [watchedBy.post.postID for watchedBy in WatchedBy.objects.filter(user=user)]
-
-            postsList = list()
-
-            notWatchedPosts = Post.objects.filter(creator__in=followings).exclude(postID__in=watchedList)
-            watchedPosts    = Post.objects.filter(creator__in=followings, postID__in=watchedList)
-
-            for post in notWatchedPosts.order_by('timeCreated').reverse()[:listSize]:
-                postsList.append(post.to_dict()) 
-
-            for post in watchedPosts.order_by('timeCreated').reverse()[:listSize - len(postsList)]:
-                postsList.append(post.to_dict())   
-                
-            return JsonResponse({"posts": postsList})        
-
-    except:
-        print(" [ERROR]", sys.exc_info())
-        return HttpResponse(status=500)
+# Time to load    10 watched posts: 0.026569128036499023
+# Time to load    20 watched posts: 0.01180410385131836
+# Time to load    50 watched posts: 0.01366281509399414
+# Time to load   100 watched posts: 0.01414179801940918
+# Time to load   200 watched posts: 0.01628899574279785
+# Time to load   500 watched posts: 0.02431488037109375
+# Time to load  1000 watched posts: 0.08461523056030273
+# Time to load  2000 watched posts: 0.06368684768676758
+# Time to load  5000 watched posts: 0.17388391494750977
+# Time to load 10000 watched posts: 0.3375213146209717
+# Time to load 20000 watched posts: 0.7280130386352539

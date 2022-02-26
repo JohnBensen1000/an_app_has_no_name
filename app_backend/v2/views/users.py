@@ -100,9 +100,7 @@ def user(request, uid=None):
 					chatMember.chat.delete()
 				chatMember.delete()
 
-			if os.getenv("ENVIRONMENT") == "PRODUCTION":
-				firebase_admin.auth.delete_user(user.uid)
-			user.delete_account()
+			user.delete()
 			
 			return JsonResponse({'deleted': True})
 
