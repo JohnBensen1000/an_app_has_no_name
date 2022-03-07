@@ -73,9 +73,7 @@ class CommentsTest(BaseTest):
         return json.loads(response2.content)["path"]
 
     def test_delete_comment(self):
-        commentDocRef = db.document('COMMENTS/' + self.post.postID + self.commentPath)
-        url           = reverse('comments', kwargs={'postID': self.post.postID})
-        print(commentDocRef.get().to_dict())
+        url = reverse('comments', kwargs={'postID': self.post.postID})
 
         response = self.client.delete(
             url, 
@@ -85,5 +83,7 @@ class CommentsTest(BaseTest):
             content_type='application/json'
         )
 
+        commentDocRef = db.document('COMMENTS/' + self.post.postID + self.commentPath)
+
         self.assertEqual(response.status_code, 200)
-        print(commentDocRef.get().to_dict())
+        self.assertIsNone(commentDocRef.get().to_dict())

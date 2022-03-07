@@ -34,6 +34,7 @@ def comments(request, postID=None):
         
         if request.method == "POST":
             requestJson = json.loads(request.body)
+            post        = Post.objects.get(postID=postID)
 
             if profanity.contains_profanity(requestJson["comment"]):
                 return JsonResponse({"denied": "profanity"})
@@ -52,7 +53,8 @@ def comments(request, postID=None):
             }
             commentDocRef.set(commentDict)
 
-            activity_feed.add_new_comment(postID, requestJson["uid"])
+            if post.creator.uid != requestJson["uid"]:
+                activity_feed.add_new_comment(postID, requestJson["uid"])
 
             del commentDict["datePosted"]
 
@@ -72,10 +74,7 @@ def comments(request, postID=None):
         if request.method == "DELETE":
             body          = json.loads(request.body)
             commentDocRef = db.document('COMMENTS/' + postID + body["path"])
-            commentDocRef.update({
-                "uid": None,
-                "comment": "[deleted]",
-            })
+            firestore_helpers.delete_document_and_sub_collections(commentDocRef)
             
             return JsonResponse({})
 

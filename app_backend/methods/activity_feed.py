@@ -30,6 +30,7 @@ def _send_push_notification(user, notification):
                 }, 
                 token=user.deviceToken
             )
+            print(message)
 
             messaging.send(message)
     except:
