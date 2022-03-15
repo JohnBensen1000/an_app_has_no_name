@@ -30,7 +30,6 @@ def _send_push_notification(user, notification):
                 }, 
                 token=user.deviceToken
             )
-            print(message)
 
             messaging.send(message)
     except:
@@ -74,3 +73,12 @@ def add_follower(user, follower):
 
     _upload_activity(user, activity)
     _send_push_notification(user, follower.username + " started following you!")
+
+'''
+
+{
+    "data": {"newActivity": "True"}, 
+    "notification": {"title": "user1 commented on your post!"},
+     "token": "Ciwo4C6R9EURjJqpuss82GKGPtY2"
+}
+'''

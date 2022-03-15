@@ -226,12 +226,20 @@ class Post(models.Model):
 		return super(self.__class__, self).delete()
 
 	def to_dict(self):
+		if self.timeCreated != None:
+			date           = str(self.timeCreated.date())
+			date_split     = date.split("-")
+			date_formatted = date_split[1] + "/" + date_split[2] + "/" + date_split[0][2:4]
+		else:
+			date_formatted = ""
+
 		return {
 			'creator':     self.creator.to_dict(),
 			'postID':      str(self.postID),
 			'isImage':     self.isImage,
 			'downloadURL': self.downloadURL,
 			'caption':     self.caption,
+			'date':		   date_formatted,
 		}
 
 class WatchedBy(models.Model):
